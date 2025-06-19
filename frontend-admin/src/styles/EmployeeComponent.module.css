@@ -1,0 +1,123 @@
+*{
+    padding: 0;
+    border: 0;
+    box-sizing: border-box;
+}
+.main{
+    width: 100%;
+    height: 10%;
+    border-bottom: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 5%;
+    padding-left: 5.5%;
+    position: relative;
+}
+.main:hover{
+    background-color: rgb(243, 243, 243);
+}
+.name{
+    width: 13%;
+}
+.id{
+    width: 15%;
+    color: rgb(9,29,63);
+}
+.assigned{
+    width: 14%;
+    text-align: center;
+    padding-right: 5%;
+    color:rgb(97,97,97)
+}
+.closed{
+    width: 8%;
+    text-align: center;
+    margin-right: 4%;
+    color:rgb(97,97,97)
+
+}
+.status{
+    /* border: 1px solid black; */
+    padding: 0.5em 0;
+    width:5.5%;
+    text-align: center;
+    margin-right: 4%;
+    font-size: medium;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    border-radius: 10px;
+}
+.circle{
+    width: 10%;
+    height: 1vh;
+    /* border: 1px solid black; */
+    border-radius: 50%;
+}
+.inactive{
+    background-color: rgb(229,78,70);
+}
+.active{
+    background-color: rgb(103,185,106)
+}
+.activeDiv{
+    background-color: rgb(235,252,243);
+}
+.inactiveDiv{
+    background-color: rgb(252,242,234);
+}
+.activeP{
+    color: rgb(68,125,76);
+}
+.inactiveP{
+    color: rgb(229,78,70);
+}
+.p{
+    font-weight: 600;
+}
+
+.options{
+    width:6%;
+    text-align: center;
+    background:none;
+    cursor: pointer;
+}
+.edit{
+    position:absolute;
+    background-color: white;
+    height: 12vh;
+    width: 8%;
+    border: 1px solid black;
+    left: 85%;
+    top: 50%;
+    border-radius: 10px;
+    box-shadow: 0px 10px 10px rgb(205, 205, 205);
+    padding: 2% 1%;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 50%;
+    
+}
+.button{
+    padding: 0.5em;
+    width: 100%;
+    text-align: justify;
+    font-size: medium;
+ 
+}
+.tagStyle{
+    margin-right: 10%;
+}
+.nameText{
+    color: rgb(16,24,40);
+    font-weight: 600;
+    font-size: large;
+}
+.mailText{
+    font-weight: 100;
+    color: rgb(107,120,142);
+}

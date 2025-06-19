@@ -1,0 +1,1 @@
+import Lead from "../models/Lead.model.js";

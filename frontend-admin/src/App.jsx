@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import style from './styles/App.module.css';
+import {Toaster} from 'react-hot-toast'
 
 import SidebarComponent from './components/SidebarComponent.jsx';
 import Dashboard from './pages/Dashboard.jsx';
@@ -12,6 +13,7 @@ function App() {
 
   return (
     <div className={style.main}>
+      <Toaster />
       <SidebarComponent selected={selected} select={setSelected} />
 
       {selected === 'Dashboard' && <Dashboard select={selected}/>}

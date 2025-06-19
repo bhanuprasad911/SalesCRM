@@ -9,5 +9,58 @@
     background-color: blue;
     border-bottom-left-radius: 25px;
     border-bottom-right-radius: 25px;
+    padding-left: 5%;
+    padding-top: 2%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 20%;
+}
+.title{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+}
+.titleText{
+    font-size: large;
+    color: white;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+.editedTitle{
+    color: yellow;
+}
+.wishDiv{
+    width: 90%;
+    height: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 5%;
+    color: white;
+}
+.name{
+    font-size: xx-large;
+}
+.wish{
+    font-size: medium;
+}
+.details{
+    width: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+.button{
+    background: none;
+    color: white;
+    cursor: pointer;
+}
+.pageName{
+    font-size: x-large;
     color: white;
 }

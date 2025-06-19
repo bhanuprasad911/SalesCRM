@@ -7,15 +7,26 @@
     height: 100vh;
     width: 87vw;
     position: relative;
+    /* padding: 2px; */
+}
+.innermain{
+    padding: 1%;
+    width: 100%;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 3%;
 }
 .title{
-    height: 5vh;
+    width: 100%;
+    height: 2%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0% 1%;
 }
-.button{
+.button1{
     padding: 0.7rem;
     background-color: grey;
     border: none;
@@ -23,4 +34,33 @@
     color: white;
     font-size: medium;
     border-radius: 7px;
+}
+.body{
+    width: 100%;
+    border: 1px solid black;
+    margin-top: 10px;
+    height: 90%;
+    border-radius: 10px;
+}
+.tableHead{
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    border-bottom: 1px solid black;
+}
+.button{
+    background: none;
+    color: rgb(66,82,109);
+    cursor: pointer;
+    font-size: medium;
+    /* border: 1px solid black; */
+
+}
+.name{
+    width: 10%;
+    text-align: left;
+}
+.id{
+    width: 15%;
 }

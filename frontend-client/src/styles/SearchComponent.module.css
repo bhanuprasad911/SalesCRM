@@ -1,0 +1,72 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+.main{
+    height: 10%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+.input{
+    width: 80%;
+    padding: 1rem;
+    background-color: rgb(205, 205, 205);
+    border: none;
+    outline: none;
+    font-size: large;
+    padding-left: 10%;
+    color: grey;
+    border-radius: 10px;
+}
+.button{
+    width: 14%;
+    padding: 0.8rem;
+    border-radius: 50%;
+    cursor: pointer;
+    background-color: rgb(205, 205, 205);
+}
+.icon{
+    position: absolute;
+    color: black;
+    left: 2%;
+}
+.filter{
+    position: absolute;
+    height: 23vh;
+    width: 12vw;
+    padding: 3%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    z-index: 10;
+    background-color: white;
+    left: 60%;
+    border-radius: 7px;
+    box-shadow: 0px 0px 10px grey;
+    top: 50%;
+    gap: 6%;
+}
+.saveButton{
+    width: 80%;
+    padding: 0.7rem;
+    background-color: rgb(54,54,54);
+    color: white;
+    font-size: medium;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.title{
+    width: 100%;
+    font-size: medium;
+    text-align: left;
+}
+.select{
+    width: 100%;
+    padding: 1rem;
+    font-size: medium;
+}

@@ -6,20 +6,20 @@ import { SlCalender } from "react-icons/sl";
 function FooterComponent({select, setSelect}) {
   return (
     <div className={style.main}>
-        <div className={`${style.section} ${select==='home'?style.selected:""}`} onClick={()=>setSelect('home')}>
+        <div className={`${style.section} ${select==='Home'?style.selected:""}`} onClick={()=>setSelect('Home')}>
             <FaHome size={30}/>
             <p>Home</p>
         </div>
-        <div className={`${style.section} ${select==='leads'?style.selected:""}`} onClick={()=>setSelect('leads')}>
+        <div className={`${style.section} ${select==='Leads'?style.selected:""}`} onClick={()=>setSelect('Leads')}>
             <FaUserTag size={30}/>
             <p>Leads</p>
 
         </div>
-        <div className={`${style.section} ${select==='schedule'?style.selected:""}`} onClick={()=>setSelect('schedule')}>
+        <div className={`${style.section} ${select==='Schedule'?style.selected:""}`} onClick={()=>setSelect('Schedule')}>
             <SlCalender size={30}/>
             <p>Schedule</p>
         </div>
-        <div className={`${style.section} ${select==='profile'?style.selected:""}`} onClick={()=>setSelect('profile')}>
+        <div className={`${style.section} ${select==='Profile'?style.selected:""}`} onClick={()=>setSelect('Profile')}>
             <FaRegUserCircle size={30}/>
             <p>Profile</p>
         </div>

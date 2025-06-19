@@ -1,15 +1,11 @@
-*{
-    padding: 0;
-    border: 0;
-    box-sizing: border-box;
-    user-select: none;
+* {
+  padding: 0;
+  border: 0;
+  box-sizing: border-box;
+  user-select: none;
 }
-.main{
-    height: 100%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid black;
+.main {
+  height: 100%;
+  width: 100%;
+  padding: 2%;
 }
