@@ -18,3 +18,7 @@ export const getEmpDetailsWthID = async(id)=>{
     const res = await axiosInstance.get(`/employee/${id}`)
     return res
 }
+export const updateEmp = async(data)=>{
+    const response = await axiosInstance.patch('/employee', data)
+    return response
+}

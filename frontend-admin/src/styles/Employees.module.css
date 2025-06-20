@@ -28,26 +28,27 @@
 }
 .button1{
     padding: 0.7rem;
-    background-color: grey;
+    background-color: rgb(214, 214, 214);
     border: none;
     cursor: pointer;
-    color: white;
+    color: rgb(88, 88, 88);
     font-size: medium;
     border-radius: 7px;
 }
 .body{
     width: 100%;
-    border: 1px solid black;
+    border: 3px solid rgb(234,236,240);
     margin-top: 10px;
     height: 90%;
     border-radius: 10px;
+    overflow: hidden;
 }
 .tableHead{
     padding: 1rem;
+    padding-left: 5rem;
     display: flex;
     align-items: center;
     justify-content: space-around;
-    border-bottom: 1px solid black;
 }
 .button{
     background: none;
@@ -63,4 +64,31 @@
 }
 .id{
     width: 15%;
+}
+.options{
+    color: white;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pageButton {
+    background: none;
+  /* border: 1px solid #ccc; */
+  font-size: medium;
+  margin: 0 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgb(102,112,133);
+}
+
+
+.activePage {
+    background-color: rgb(239,241,244);
+    color: rgb(9,30,66);
+    border-radius: 8px;
+  /* border: 1px solid #007bff; */
 }

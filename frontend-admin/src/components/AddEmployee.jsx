@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import style from "../styles/AddEmployee.module.css";
-import { EmpSignup, getEmpDetailsWthID } from "../services/api.js";
+import { EmpSignup, getEmpDetailsWthID, updateEmp } from "../services/api.js";
 import { toast } from "react-hot-toast";
 
 function AddEmployee(props) {
@@ -38,21 +38,38 @@ function AddEmployee(props) {
   };
 
   const handleSave = async () => {
-    console.log(formData)
-    // if (currentUser) {
-    //   toast.error("You're editing an employee. Updating is not supported here.");
-    //   return;
-    // }
+    console.log(formData);
 
-    // try {
-    //   await EmpSignup(formData);
-    //   toast.success("Employee added successfully");
-    //   props.setForm(false);
-    //   props.setEdit("");
-    // } catch (error) {
-    //   console.error(error);
-    //   toast.error(error?.response?.data?.message || "Error adding employee");
-    // }
+    try {
+      if (currentUser) {
+        const response = await updateEmp({
+          id: currentUser._id,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+        });
+        console.log(response);
+        toast.success(response.data.message);
+
+        // ✅ Update employee in list
+        props.setEmployees((prev) =>
+          prev.map((emp) =>
+            emp._id === currentUser._id
+              ? { ...emp, firstName: formData.firstName, lastName: formData.lastName }
+              : emp
+          )
+        );
+      } else {
+        const response = await EmpSignup(formData);
+        props.setEmployees((prev) => [...prev, response.data.data]);
+        toast.success("Employee added successfully");
+      }
+
+      props.setForm(false);
+      props.setEdit("");
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Error saving employee");
+    }
   };
 
   return (
@@ -72,32 +89,25 @@ function AddEmployee(props) {
         </div>
 
         <div className={style.form}>
-          <label className={style.label}>First name</label>
-          <br /><br />
+          <label className={style.label}>First name</label><br /><br />
           <input
             name="firstName"
             className={style.input}
             value={formData.firstName}
             onChange={handleChange}
             type="text"
-            // readOnly={Boolean(currentUser)}
-          />
-          <br /><br /><br />
+          /><br /><br /><br />
 
-          <label className={style.label}>Last name</label>
-          <br /><br />
+          <label className={style.label}>Last name</label><br /><br />
           <input
             name="lastName"
             className={style.input}
             value={formData.lastName}
             onChange={handleChange}
             type="text"
-            // readOnly={Boolean(currentUser)}
-          />
-          <br /><br /><br />
+          /><br /><br /><br />
 
-          <label className={style.label}>Email</label>
-          <br /><br />
+          <label className={style.label}>Email</label><br /><br />
           <input
             name="email"
             className={style.input}
@@ -105,11 +115,9 @@ function AddEmployee(props) {
             onChange={handleChange}
             type="email"
             readOnly={Boolean(currentUser)}
-          />
-          <br /><br /><br />
+          /><br /><br /><br />
 
-          <label className={style.label}>Location</label>
-          <br /><br />
+          <label className={style.label}>Location</label><br /><br />
           <select
             name="location"
             className={style.input}
@@ -121,11 +129,9 @@ function AddEmployee(props) {
             {indianStates.map((state, id) => (
               <option key={id} value={state}>{state}</option>
             ))}
-          </select>
-          <br /><br /><br />
+          </select><br /><br /><br />
 
-          <label className={style.label}>Preferred language</label>
-          <br /><br />
+          <label className={style.label}>Preferred language</label><br /><br />
           <select
             name="language"
             className={style.input}
@@ -137,16 +143,13 @@ function AddEmployee(props) {
             {Languages.map((lang, id) => (
               <option key={id} value={lang}>{lang}</option>
             ))}
-          </select>
-          <br /><br /><br /><br /><br />
+          </select><br /><br /><br /><br /><br />
 
-        
-            <div className={style.buttonDiv}>
-              <button className={style.saveButton} onClick={handleSave}>
-                Save
-              </button>
-            </div>
-          
+          <div className={style.buttonDiv}>
+            <button className={style.saveButton} onClick={handleSave}>
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </div>

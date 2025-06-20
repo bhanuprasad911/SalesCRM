@@ -33,7 +33,6 @@ export const getEmployeeDetails = async (req, res) => {
   try {
     const result = await Employee.find()
       .select("-password")
-      .sort({ createdAt: -1 });
 
     res.status(200).json({ message: "Employee details fetched", data: result });
   } catch (error) {
@@ -49,7 +48,7 @@ export const getEmployeeDetailsById = async (req, res) => {
       return res.status(400).json({ message: "Employee id is required" });
     if (!result)
       return res
-        .status(500)
+        .status(404)
         .json({ message: "No employee found with the given id" });
     return res
       .status(200)
@@ -57,6 +56,34 @@ export const getEmployeeDetailsById = async (req, res) => {
   } catch (error) {
     console.log("error while fetching emp details with id", error);
     return res.status(500).json({ message: error.message });
+  }
+};
+export const updateEmpDetails = async (req, res) => {
+  try {
+    const { id, firstName, lastName } = req.body;
+
+    if (!id || !firstName || !lastName) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const result = await Employee.findByIdAndUpdate(
+      id,
+      { firstName, lastName },
+      { new: true, runValidators: true }
+    );
+
+    if (!result) {
+      return res
+        .status(404)
+        .json({ message: "No employee exists with the given ID" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Employee details updated successfully", data: result });
+  } catch (error) {
+    console.error("Error while updating emp details:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 

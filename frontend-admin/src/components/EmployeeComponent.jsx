@@ -13,6 +13,11 @@ function EmployeeComponent(props) {
         const res =await deleteEmployee(props.employee._id)
         console.log(res)
         toast.success(res.data.message)
+        const updated = props.employees?.filter((emp)=>{
+          return emp._id!= props.employee._id
+        })
+        props.setEmployee(updated)
+        setShowEdit(false)
         
       } catch (error) {
         console.log(error)
@@ -23,6 +28,9 @@ function EmployeeComponent(props) {
     
   return (
     <div className={style.main}>
+      <div className={style.profile}>
+        {props.employee.firstName[0].toUpperCase()+props.employee.lastName[0].toUpperCase()}
+      </div>
       <div className={style.name}>
         <p className={style.nameText}>{`${props.employee.firstName} ${props.employee.lastName}`}</p>
         <p className={style.mailText}>{props.employee.email}</p>
