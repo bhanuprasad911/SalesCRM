@@ -1,30 +1,90 @@
-import React, { useState } from "react";
-import style from "./styles/App.module.css";
-import HeaderComponent from "./components/HeaderComponent.jsx";
-import FooterComponent from "./components/FooterComponent.jsx";
-import HomePage from "./pages/HomePage.jsx";
-import LeadsPage from "./pages/LeadsPage.jsx";
-import SchedulePage from "./pages/SchedulePage.jsx";
-import ProfilePage from "./pages/ProfilePage.jsx";
-import {Toaster} from 'react-hot-toast'
+// App.js
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
 
-function App() {
-  const [selected, setSelected] = useState("Home");
+import HeaderComponent from './components/HeaderComponent.jsx';
+import FooterComponent from './components/FooterComponent.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import HomePage from './pages/HomePage.jsx';
+import LeadsPage from './pages/LeadsPage.jsx';
+import SchedulePage from './pages/SchedulePage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import style from './styles/App.module.css';
+import { Toaster } from 'react-hot-toast';
+import useLogoutOnTabCLose from './hooks/useLogoutOnTabCLose.js';
+import useTabCloseLogout from './hooks/useTabCloseLogout.js';
+
+const Layout = ({ children }) => {
+  const location = useLocation();
+  const isLogin = location.pathname === '/login';
   return (
     <div className={style.main}>
       <Toaster />
       <div className={style.innerMain}>
-        <HeaderComponent page={selected} setPage={setSelected}/>
-        <div className={style.body}>
-          {selected === "Home" && <HomePage />}
-          {selected === "Leads" && <LeadsPage />}
-          {selected === "Schedule" && <SchedulePage />}
-          {selected === "Profile" && <ProfilePage />}
-        </div>
-        <FooterComponent select={selected} setSelect={setSelected} />
+        <HeaderComponent />
+        <div className={style.body}>{children}</div>
+        {!isLogin && <FooterComponent />}
       </div>
     </div>
   );
-}
+};
+
+const LayoutWrapper = () => {
+  // useLogoutOnTabCLose()
+  useTabCloseLogout()
+
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Navigate to="/home" />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/home"
+          element={
+            <PrivateRoute>
+              <HomePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/leads"
+          element={
+            <PrivateRoute>
+              <LeadsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/schedule"
+          element={
+            <PrivateRoute>
+              <SchedulePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <ProfilePage />
+            </PrivateRoute>
+          }
+        />
+      </Routes>
+    </Layout>
+  );
+};
+
+
+const App = () => {
+  return (
+    <Router basename="/ex">
+      <AuthProvider>
+        <LayoutWrapper />
+      </AuthProvider>
+    </Router>
+  );
+};
 
 export default App;

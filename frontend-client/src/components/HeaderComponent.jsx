@@ -1,8 +1,19 @@
 import React from 'react'
 import style from '../styles/HeaderComponent.module.css'
 import { IoIosArrowBack } from "react-icons/io";
+import { useLocation, useNavigate } from 'react-router';
+import { useAuth } from '../context/AuthContext';
 
-function HeaderComponent({page, setPage}) {
+
+function HeaderComponent({}) {
+  const {user}= useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const rawPath = location.pathname
+  const page =rawPath.slice(1).split("-").map(str => str.charAt(0).toUpperCase() + str.slice(1))
+    .join(" ");
+const username= user?.firstName+" "+user?.lastName
+const userN= username.toString()
   return (
     <div className={style.main}>
         <div className={style.title}>
@@ -12,9 +23,9 @@ function HeaderComponent({page, setPage}) {
         {
           page==='Home'?<div className={style.wishDiv}>
             <p className={style.wish}>Good moring</p>
-            <p className={style.name}>Bhanu prasad</p>
+            <p className={style.name}>{userN}</p>
           </div>:<div className={style.details}>
-            <button className={style.button} onClick={()=>setPage("Home")}>
+            <button className={style.button} onClick={()=>navigate('/home')}>
               <IoIosArrowBack color='white' size={30} />
             </button>
             <p className={style.pageName}>{page}</p>

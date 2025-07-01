@@ -28,9 +28,15 @@ const EmployeeSchema = new mongoose.Schema(
     password: { type: String, required: true },
     location: String,
     language: String,
-    status:{type:String, enum:["Active", "Inactive"], default:"Inactive"},
-    assignedChats: { type: Number, default: 0 },
-    closedChats: { type: Number, default: 0 },
+    status: { type: String, enum: ["Active", "Inactive"], default: "Inactive" },
+    assignedChats: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Leads" }],
+      default: [],
+    },
+    closedChats: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Leads" }],
+      default: [],
+    },
     history: [HistorySchema],
   },
   { timestamps: true }

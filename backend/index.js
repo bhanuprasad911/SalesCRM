@@ -6,6 +6,8 @@ import path from "path";
 dotenv.config();
 import empRouter from "./routes/EmployeeRoutes.js";
 import LeadRouter from "./routes/LeadRoutes.js";
+import cookieParser from "cookie-parser";
+import adminrouter from "./routes/AdminRoutes.js";
 
 const app = express();
 const port = process.env.PORT;
@@ -14,16 +16,18 @@ const __dirname = path.resolve();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: ["http://localhost:5173", "http://localhost:5174", "http://192.168.0.18:5173"],
     credentials: true,
   })
 );
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser())
 
 app.use("/api/employee", empRouter);
 app.use('/api/lead', LeadRouter)
+app.use('/api/admin', adminrouter)
 
 app.use(
   "/admin",

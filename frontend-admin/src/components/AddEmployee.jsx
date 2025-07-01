@@ -13,15 +13,9 @@ function AddEmployee(props) {
     language: "",
   });
 
-  const indianStates = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
-    "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
-    "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland",
-    "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
-    "Uttar Pradesh", "Uttarakhand", "West Bengal"
-  ];
+  const indianStates = ["Pune", "Hyderabad", "Delhi"];
 
-  const Languages = ["English", "Hindi", "Telugu", "Malayalam", "Urdu"];
+  const Languages = ["Bengali", "English", "Hindi", "Tamil"];
 
   useEffect(() => {
     const getEmployee = async () => {
@@ -54,7 +48,11 @@ function AddEmployee(props) {
         props.setEmployees((prev) =>
           prev.map((emp) =>
             emp._id === currentUser._id
-              ? { ...emp, firstName: formData.firstName, lastName: formData.lastName }
+              ? {
+                  ...emp,
+                  firstName: formData.firstName,
+                  lastName: formData.lastName,
+                }
               : emp
           )
         );
@@ -89,25 +87,37 @@ function AddEmployee(props) {
         </div>
 
         <div className={style.form}>
-          <label className={style.label}>First name</label><br /><br />
+          <label className={style.label}>First name</label>
+          <br />
+          <br />
           <input
             name="firstName"
             className={style.input}
             value={formData.firstName}
             onChange={handleChange}
             type="text"
-          /><br /><br /><br />
+          />
+          <br />
+          <br />
+          <br />
 
-          <label className={style.label}>Last name</label><br /><br />
+          <label className={style.label}>Last name</label>
+          <br />
+          <br />
           <input
             name="lastName"
             className={style.input}
             value={formData.lastName}
             onChange={handleChange}
             type="text"
-          /><br /><br /><br />
+          />
+          <br />
+          <br />
+          <br />
 
-          <label className={style.label}>Email</label><br /><br />
+          <label className={style.label}>Email</label>
+          <br />
+          <br />
           <input
             name="email"
             className={style.input}
@@ -115,9 +125,14 @@ function AddEmployee(props) {
             onChange={handleChange}
             type="email"
             readOnly={Boolean(currentUser)}
-          /><br /><br /><br />
+          />
+          <br />
+          <br />
+          <br />
 
-          <label className={style.label}>Location</label><br /><br />
+          <label className={style.label}>Location</label>
+          <br />
+          <br />
           <select
             name="location"
             className={style.input}
@@ -127,11 +142,18 @@ function AddEmployee(props) {
           >
             <option value="">Select preferred location</option>
             {indianStates.map((state, id) => (
-              <option key={id} value={state}>{state}</option>
+              <option key={id} value={state}>
+                {state}
+              </option>
             ))}
-          </select><br /><br /><br />
+          </select>
+          <br />
+          <br />
+          <br />
 
-          <label className={style.label}>Preferred language</label><br /><br />
+          <label className={style.label}>Preferred language</label>
+          <br />
+          <br />
           <select
             name="language"
             className={style.input}
@@ -141,9 +163,16 @@ function AddEmployee(props) {
           >
             <option value="">Select preferred language</option>
             {Languages.map((lang, id) => (
-              <option key={id} value={lang}>{lang}</option>
+              <option key={id} value={lang}>
+                {lang}
+              </option>
             ))}
-          </select><br /><br /><br /><br /><br />
+          </select>
+          <br />
+          <br />
+          <br />
+          <br />
+          <br />
 
           <div className={style.buttonDiv}>
             <button className={style.saveButton} onClick={handleSave}>

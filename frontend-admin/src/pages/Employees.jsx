@@ -2,85 +2,97 @@ import React, { useState, useEffect } from "react";
 import style from "../styles/Employees.module.css";
 import SearchComponent from "../components/SearchComponent.jsx";
 import AddEmployee from "../components/AddEmployee.jsx";
-import { getEmployees } from "../services/api.js";
 import EmployeeComponent from "../components/EmployeeComponent.jsx";
-
+import { getEmployees, deleteEmployee } from "../services/api.js";
+import { useSearchParams } from "react-router";
 
 function Employees({ select }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageFromUrl = parseInt(searchParams.get("page")) || 1;
+
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [sort, setSort] = useState({ field: "", direction: "asc" });
   const [sorted, setSorted] = useState([]);
   const [edit, setEdit] = useState("");
-  
-
- 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(pageFromUrl);
   const itemsPerPage = 10;
 
-
+  // Fetch employees on mount
   useEffect(() => {
-    const empDetails = async () => {
+    const fetchEmployees = async () => {
       try {
         const res = await getEmployees();
         setEmployees(res.data.data);
         setSorted(res.data.data);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     };
-    empDetails();
+    fetchEmployees();
   }, []);
 
-  // ✅ Sync sorted with employees
+  // Sync sort when employees change
   useEffect(() => {
     setSorted(employees);
   }, [employees]);
 
-  // ✅ Pagination logic
+  // Sync page to URL
+  useEffect(() => {
+    setSearchParams({ page: currentPage });
+  }, [currentPage, setSearchParams]);
+
+  // Sorting logic
+  useEffect(() => {
+    let sortedData = [...employees];
+
+    if (sort.field) {
+      sortedData.sort((a, b) => {
+        let aVal = a[sort.field] ?? "";
+        let bVal = b[sort.field] ?? "";
+
+        if (typeof aVal === "string") aVal = aVal.toLowerCase();
+        if (typeof bVal === "string") bVal = bVal.toLowerCase();
+
+        if (aVal < bVal) return sort.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return sort.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    setSorted(sortedData);
+  }, [sort, employees]);
+
+  // Pagination calculations
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentEmployees = sorted.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(sorted.length / itemsPerPage);
 
-  const handleSort = (field) => {
-  setSort((prev) => {
-    if (prev.field === field) {
-      // Toggle direction
-      return {
-        field,
-        direction: prev.direction === "asc" ? "desc" : "asc",
-      };
-    } else {
-      // New field, default to ascending
-      return { field, direction: "asc" };
+  // Auto-correct invalid current page
+  useEffect(() => {
+    const total = Math.ceil(sorted.length / itemsPerPage);
+    if (currentPage > total) {
+      setCurrentPage(Math.max(1, total));
     }
-  });
-};
+  }, [sorted, currentPage]);
 
+  const handleSort = (field) => {
+    setSort((prev) => ({
+      field,
+      direction: prev.field === field && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
 
- useEffect(() => {
-  let sortedData = [...employees];
-
-  if (sort.field) {
-    sortedData.sort((a, b) => {
-      let aVal = a[sort.field] ?? "";
-      let bVal = b[sort.field] ?? "";
-
-      // Convert to lowercase for string sorting
-      if (typeof aVal === "string") aVal = aVal.toLowerCase();
-      if (typeof bVal === "string") bVal = bVal.toLowerCase();
-
-      if (aVal < bVal) return sort.direction === "asc" ? -1 : 1;
-      if (aVal > bVal) return sort.direction === "asc" ? 1 : -1;
-      return 0;
-    });
-  }
-
-  setSorted(sortedData);
-}, [sort, employees]);
-
+  const handleDelete = async (id) => {
+    try {
+      await deleteEmployee(id);
+      setEmployees((prev) => prev.filter((emp) => emp._id !== id));
+    } catch (error) {
+      console.error("Failed to delete employee:", error);
+    }
+  };
 
   return (
     <div className={style.main}>
@@ -105,27 +117,24 @@ function Employees({ select }) {
 
         <div className={style.body}>
           <div className={style.tableHead}>
-  <button className={`${style.button} ${style.name}`} onClick={() => handleSort("firstName")}>
-    Name {sort.field === "firstName" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
-  </button>
-  <button className={style.button} onClick={() => handleSort("_id")}>
-    Employee id {sort.field === "_id" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
-  </button>
-  <button className={style.button} onClick={() => handleSort("assignedChats")}>
-    Assigned Leads {sort.field === "assignedChats" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
-  </button>
-  <button className={style.button} onClick={() => handleSort("closedChats")}>
-    Closed Leads {sort.field === "closedChats" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
-  </button>
-  <button className={style.button} onClick={() => handleSort("status")}>
-    Status {sort.field === "status" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
-  </button>
-  <button className={`${style.button} ${style.options}`}>Options</button>
-</div>
+            <button className={`${style.button} ${style.name}`} onClick={() => handleSort("firstName")}>
+              Name {sort.field === "firstName" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+            </button>
+            <button className={style.button} onClick={() => handleSort("_id")}>
+              Employee ID {sort.field === "_id" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+            </button>
+            <button className={style.button} onClick={() => handleSort("assignedChats")}>
+              Assigned Leads {sort.field === "assignedChats" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+            </button>
+            <button className={style.button} onClick={() => handleSort("closedChats")}>
+              Closed Leads {sort.field === "closedChats" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+            </button>
+            <button className={style.button} onClick={() => handleSort("status")}>
+              Status {sort.field === "status" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+            </button>
+            <button className={`${style.button} ${style.options}`}>Options</button>
+          </div>
 
-
-
-          {/* ✅ Paginated employee list */}
           {currentEmployees.map((emp) => (
             <EmployeeComponent
               key={emp._id}
@@ -133,11 +142,12 @@ function Employees({ select }) {
               employees={sorted}
               setEdit={setEdit}
               setEmployee={setEmployees}
+              onDelete={handleDelete} // pass delete handler
             />
           ))}
         </div>
 
-        {/* ✅ Pagination Buttons */}
+        {/* Pagination */}
         {totalPages > 1 && (
           <div className={style.pagination}>
             {Array.from({ length: totalPages }, (_, index) => (

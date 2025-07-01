@@ -25,6 +25,10 @@ function EmployeeComponent(props) {
         
       }
     }
+    console.log(props.employee.assignedChats.length)
+    
+    const assignedChatsCOunt = props.employee.assignedChats.length
+    const closedChats = props.employee.closedChats.length
     
   return (
     <div className={style.main}>
@@ -36,8 +40,8 @@ function EmployeeComponent(props) {
         <p className={style.mailText}>{props.employee.email}</p>
       </div>
       <p className={style.id}>{props.employee._id}</p>
-      <p className={style.assigned}>{props.employee.assignedChats}</p>
-      <p className={style.closed}>{props.employee.closedChats}</p>
+      <p className={style.assigned}>{assignedChatsCOunt}</p>
+      <p className={style.closed}>{closedChats}</p>
       <div className={`${style.status} ${props.employee.status==='Active'?style.activeDiv:style.inactiveDiv}`}>
         <div className={`${style.circle} ${props.employee.status==='Inactive'?style.inactive:style.active}`}></div>
         <p className={`${style.p} ${props.employee.status==="Active"?style.activeP:style.inactiveP}`}>

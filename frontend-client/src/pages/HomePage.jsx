@@ -1,43 +1,100 @@
-import React, { useState } from 'react';
-import style from '../styles/HomePage.module.css';
-import toast from 'react-hot-toast';
+import React, { useEffect, useState } from "react";
+import style from "../styles/HomePage.module.css";
+import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
+import { updateCheck } from "../services/api.js";
+
 
 function HomePage() {
+  const { user, setUser } = useAuth();
   const [checkedIn, setCheckedIn] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [checkInDetails, setCheckedInDetails] = useState({
-    checkIn: "",
-    checkOut: ""
+    checkedInTime: "--:--",
+    checkedOutTime: "--:--",
   });
+  const [currentShift, setCurrentShift] = useState(null)
+  console.log(user)
 
   const getCurrentTime = () => {
-    return new Date().toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
+    return new Date().toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
     });
   };
+  useEffect(() => {
+    const today = getFormattedDate()
+    const currentShift = user.history.find(hist=> hist.date === today)
+  if (currentShift) {
+    setCheckedInDetails({
+      checkedInTime: currentShift.checkedInTime || "--:--",
+      checkedOutTime: currentShift.checkedOutTime || "--:--",
+    });
+    setCurrentShift(currentShift)
+    setCheckedIn(user.status === "Active");
+  }
+}, [user]);
 
-  const updateCheckIn = () => {
-    const currentTime = getCurrentTime();
-    if(isBreak) return toast.error("Remove break")
+  function getFormattedDate() {
+  const today = new Date();
 
-    setCheckedIn(prev => !prev);
+  const day = String(today.getDate()).padStart(2, '0');       // 01 to 31
+  const month = String(today.getMonth() + 1).padStart(2, '0'); // 01 to 12
+  const year = today.getFullYear();                            // 2025
 
-    setCheckedInDetails(prev => ({
-      ...prev,
-      [checkedIn ? 'checkOut' : 'checkIn']: currentTime
-    }));
+  return `${day}-${month}-${year}`;
+}
 
-    toast.success(!checkedIn ? 'Check-in Successful' : 'Check-out Successful');
+
+
+const updateCheckIn = async () => {
+  if (isBreak) return toast.error("Remove break");
+
+  const currentTime = getCurrentTime();
+  const prevCheckedIn = checkedIn; // Save the old value before toggling
+
+  // 👇 Prepare new check-in or check-out time before updating state
+  const newCheckInDetails = {
+    ...checkInDetails,
+    [!prevCheckedIn ? "checkedInTime" : "checkedOutTime"]: currentTime
   };
+
+  // 🔄 Update state
+  
+
+  // 📦 Send new details to backend
+  const data = {
+    checkedIn: !prevCheckedIn, // true when checking in, false when checking out
+    shift: {
+      date: getFormattedDate(),
+      checkedInTime: newCheckInDetails.checkedInTime,
+      checkedOutTime: newCheckInDetails.checkedOutTime,
+      breaks: []
+    }
+  };
+
+  try {
+    const response = await updateCheck(data);
+    console.log(response);
+    setUser(response.data.data)
+    toast.success(response.data.message);
+    setCheckedInDetails(newCheckInDetails);
+  setCheckedIn(!prevCheckedIn);
+  } catch (err) {
+    toast.error(err.response.data.message);
+    console.error(err);
+  }
+};
+
+
 
   const updateBreak = () => {
     if (!checkedIn) {
       return toast.error("Cannot start break without checking in");
     }
 
-    setIsBreak(prev => !prev);
+    setIsBreak((prev) => !prev);
     toast.success(!isBreak ? "Break started" : "Break ended");
   };
 
@@ -48,17 +105,17 @@ function HomePage() {
         <div className={style.checkin}>
           <div className={style.details}>
             <p>Check-in</p>
-            {checkInDetails?.checkIn.trim() ? <p>{checkInDetails.checkIn}</p>:<p>--:--</p>}
+            <p>{currentShift? currentShift.checkedInTime:"--:--"}</p>
+
           </div>
           <div className={style.details}>
             <p>Check-out</p>
-            {checkInDetails?.checkOut.trim() ? <p>{checkInDetails.checkOut}</p>:<p>--:--</p>}
+            <p>{currentShift? currentShift.checkedOutTime:"--:--"}</p>
           </div>
           <button
-            className={`${style.button} ${checkedIn ? style.checkedIn : ""}`}
+            className={`${style.button} ${user.status==="Active" ? style.checkedIn : ""}`}
             onClick={updateCheckIn}
-          >
-          </button>
+          ></button>
         </div>
       </div>
 
@@ -70,9 +127,7 @@ function HomePage() {
           <button
             className={`${style.button} ${isBreak ? style.isBreak : ""}`}
             onClick={updateBreak}
-          >
-          
-          </button>
+          ></button>
         </div>
         <div className={style.break}></div>
       </div>

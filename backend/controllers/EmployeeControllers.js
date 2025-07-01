@@ -1,4 +1,9 @@
 import Employee from "../models/Employee.model.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import dotenv from 'dotenv'
+dotenv.config()
+const secret = process.env.SECRET;
 
 export const signup = async (req, res) => {
   try {
@@ -29,15 +34,116 @@ export const signup = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// controllers/authController.js
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const exist = await Employee.findOne({ email });
+
+    if (!exist)
+      return res.status(400).json({ message: "Invalid username or password" });
+
+    const matched = await bcrypt.compare(password, exist.password); // ✅ fixed
+    if (!matched)
+      return res.status(400).json({ message: "Invalid username or password" });
+
+    const payload = {
+      id: exist._id,
+      email: exist.email,
+      name: exist.name, // optional
+    };
+
+    const token = jwt.sign(payload, secret,{expiresIn: "1h",});
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // ✅ change to true in production
+      sameSite: "Lax",
+    });
+
+    res.status(200).json({ message: "Login successful", data: exist });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// controllers/userController.js
+export const getMe = async(req, res) => {
+  try {
+    // req.user is attached by authMiddleware after token verification
+    const { id, email, name } = req.user;
+    const user = await Employee.findById(id)
+    res.status(200).json({
+      user:user // send only safe, non-sensitive fields
+    });
+  } catch (error) {
+    console.error('Error in /me controller:', error);
+    res.status(500).json({ message: 'Something went wrong' });
+  }
+};
+
+export const updateCheckStatus = async(req,res)=>{
+  try {
+    const {checkedIn, shift} = req.body;
+    console.log(req.body)
+    const user = req.user
+    const emp = await Employee.findById(user.id)
+    const shiftIndex = emp.history.findIndex(hist=>hist.date===shift.date);
+    if(!emp){
+      return res.status(400).json({message:"Could not find the user with the given id"})
+    }
+   if (checkedIn) {
+  if (shiftIndex !== -1 && emp.history[shiftIndex].checkedOutTime) {
+    return res.status(400).json({ message: "Your shift for today is already completed" });
+  }
+
+  emp.status = "Active";
+
+  if (shiftIndex === -1) {
+    emp.history.push({ ...shift });
+  } else {
+    emp.history[shiftIndex].checkedInTime = shift.checkedInTime;
+  }
+
+  const result = await emp.save();
+  return res.status(200).json({ message: "Check-in successful", data: result });
+}
+    emp.status="Inactive";
+    if(shiftIndex===-1){
+      return res.status(404).json({message:"Shift not found"})
+    }
+    emp.history[shiftIndex].checkedOutTime = shift.checkedOutTime
+    const result = await emp.save()
+    res.status(200).json({message:"Check-out successfull", data:result})
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({message:error.message})
+    
+  }
+}
+
+
+
 export const getEmployeeDetails = async (req, res) => {
   try {
-    const result = await Employee.find()
-      .select("-password")
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    res.status(200).json({ message: "Employee details fetched", data: result });
+    const employees = await Employee.find().skip(skip).limit(limit);
+    const total = await Employee.countDocuments();
+
+    res.json({
+      data: employees,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      total,
+    });
   } catch (error) {
-    console.log("error in getEmployeeDetails", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to fetch employees', error });
   }
 };
 export const getEmployeeDetailsById = async (req, res) => {
@@ -109,3 +215,30 @@ export const deleteEmp = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+export const logout = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict"
+  });
+  console.log('loggedOut successfull')
+
+  res.status(200).json({ message: "Logged out successfully" });
+};
+
+export const updatePassword = async(req,res)=>{
+  try {
+    const {password}= req.body
+    console.log(req.body)
+    const user = req.user;
+    const exist = await Employee.findById(user.id)
+    exist.password = password;
+    await exist.save()
+    res.status(201).json({message:"Password updated successfully"})
+  } catch (error) {
+    console.log("error in updating password", error)
+    return res.status(500).json({message:error.message})
+    
+  }
+}
+
