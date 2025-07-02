@@ -1,6 +1,5 @@
 import axiosInstance from "./axios.js";
 
-
 //lead related functions
 export const uploadTempFile = async (formData, onProgress) => {
   try {
@@ -12,8 +11,8 @@ export const uploadTempFile = async (formData, onProgress) => {
         const percent = Math.round(
           (progressEvent.loaded * 100) / progressEvent.total
         );
-        setTimeout(()=>onProgress(percent), 200)
-         // callback from component
+        setTimeout(() => onProgress(percent), 200);
+        // callback from component
       },
     });
     return res.data;
@@ -47,9 +46,6 @@ export const getLeads = async (page = 1, limit = 10) => {
   return await axiosInstance.get(`/lead?page=${page}&limit=${limit}`);
 };
 
-
-
-
 // Employee related functions
 export const EmpSignup = async (data) => {
   const response = await axiosInstance.post("/employee/signup", data);
@@ -73,23 +69,24 @@ export const updateEmp = async (data) => {
   return response;
 };
 
-
-
-export const adminSignup=async(data)=>{
-  const response=await axiosInstance.post("/admin/signup",data);
+export const adminSignup = async (data) => {
+  const response = await axiosInstance.post("/admin/signup", data);
   return response;
+};
 
-}
-
-export const adminLogin=async(data)=>{
-  const response=await axiosInstance.post("/admin/login",data);
+export const adminLogin = async (data) => {
+  const response = await axiosInstance.post("/admin/login", data);
   return response;
-  }
-  export const getAdminDetails=async()=>{
-    const response=await axiosInstance.get("/admin/me");
-    return response;
-    }
-export const updateAdminPassword = async(data)=>{
-  const response=await axiosInstance.patch("/admin/updatePassword",data);
+};
+export const getAdminDetails = async () => {
+  const response = await axiosInstance.get("/admin/me");
+  return response;
+};
+export const updateAdminPassword = async (data) => {
+  const response = await axiosInstance.patch("/admin/updatePassword", data);
+  return response;
+};
+export const getActivity = async()=>{
+  const response = await axiosInstance.get("/admin");
   return response;
 }

@@ -20,12 +20,13 @@ const adminSchema = new mongoose.Schema({
   }
 });
 
-const recentActivity = new mongoose.Schema({
-  activity: {
-    type: String,
-    required: true
-  }
-}, {timestamps:true});
+const AdminActivitySchema = new mongoose.Schema(
+  {
+    message: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
+  },
+  { timestamps: true }
+);
 
 adminSchema.pre("save", async function (next) {
   try {
@@ -40,4 +41,4 @@ adminSchema.pre("save", async function (next) {
 });
 
 export const Admin = mongoose.model("Admin", adminSchema);
-export const Activity = mongoose.model("Activity", recentActivity);
+export const Activity = mongoose.model("Activity", AdminActivitySchema);

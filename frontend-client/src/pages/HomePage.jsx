@@ -87,6 +87,20 @@ const updateCheckIn = async () => {
   }
 };
 
+function getTimeDifferenceFromNow(pastTimestamp) {
+  const past = new Date(pastTimestamp);
+  const now = new Date();
+  const diffMs = now - past;
+
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
+  } else {
+    return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  }
+}
 
 
   const updateBreak = () => {
@@ -134,7 +148,23 @@ const updateCheckIn = async () => {
 
       <div className={style.bottom}>
         <p className={style.headingTag}>User Activity</p>
-        <div className={style.activity}></div>
+        <div className={style.activity}>
+        <ul>
+  {user?.recentActivities.map((activity, index) => {
+    const hoursAgo = activity.timestamp
+      ? `${getTimeDifferenceFromNow(activity.timestamp)}`
+      : "some time ago";
+
+    return (
+      <li key={index} className={style.p}>
+        <p>{`${activity.message} - ${hoursAgo}`}</p>
+      </li>
+    );
+  })}
+</ul>
+
+       
+        </div>
       </div>
     </div>
   );

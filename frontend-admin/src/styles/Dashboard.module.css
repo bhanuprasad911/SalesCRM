@@ -44,6 +44,24 @@
 .grid6{
     grid-row: 4/9;
     grid-column: 10/13;
+    overflow: auto;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+}
+
+.li{
+    margin-top: 1rem;
+    list-style: disc;
+    color: gray;
+
+    /* margin-left: 0.4rem; */
+}
+.innerList{
+    width: 80%;
 }
 .grid7{
     grid-row: 9/13;

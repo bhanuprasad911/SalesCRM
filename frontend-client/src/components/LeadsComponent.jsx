@@ -252,7 +252,6 @@ function formatDateToLongUTC(dateString) {
                 className={style.select}
               >
                 <option value="">Select</option>
-                <option value="Ongoing">Ongoing</option>
                 <option value="Closed">Closed</option>
               </select>
               <button onClick={handleUpdateStatus} className={style.saveButton}>

@@ -1,6 +1,8 @@
 import Lead from "../models/Lead.model.js";
 import LeadFile from "../models/LeadFile.model.js";
 import Employee from "../models/Employee.model.js";
+import { Activity as AdminActivity } from "../models/Admin.model.js"; // ✅ For admin activity logs
+
 import path, { dirname } from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -12,14 +14,23 @@ import csvParser from "csv-parser";
 
 export const saveToDb = async (req, res) => {
   const { tempId, fileName } = req.body;
+  console.log(fileName);
 
   if (!tempId) {
     return res.status(400).json({ message: "Temp ID is required" });
   }
 
-  const filePath = path.join(process.cwd(), "uploads", "temp", tempId);
+  const filePath = path.join(process.cwd(), "uploads", "temp", String(tempId));
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ message: "File not found" });
+  }
+
+  // Check for duplicate file name
+  const existingFile = await LeadFile.findOne({ name: fileName });
+  if (existingFile) {
+    return res
+      .status(409)
+      .json({ message: "File with this name already exists" });
   }
 
   const rawLeads = [];
@@ -35,8 +46,6 @@ export const saveToDb = async (req, res) => {
           "phone",
           "location",
           "language",
-          "type",
-          "status",
           "source",
           "NextAvailable",
         ];
@@ -55,7 +64,7 @@ export const saveToDb = async (req, res) => {
         const leadsStep1 = [];
         const leadsUnassigned = [];
 
-        // Step 1: Assign leads based on both language and location match
+        // Step 1: Assign leads based on both language and location
         for (const lead of rawLeads) {
           const match = employees.find(
             (emp) =>
@@ -64,24 +73,21 @@ export const saveToDb = async (req, res) => {
 
           if (match) {
             const empId = match._id.toString();
-            if (!employeeMap.has(empId)) {
-              employeeMap.set(empId, []);
-            }
-            const leadDoc = { ...lead, AssignedTo: match._id };
+            if (!employeeMap.has(empId)) employeeMap.set(empId, []);
+            const leadDoc = { ...lead, AssignedTo: match._id, fileName };
             employeeMap.get(empId).push(leadDoc);
             leadsStep1.push(leadDoc);
           } else {
-            leadsUnassigned.push(lead); // Save for next step
+            leadsUnassigned.push(lead);
           }
         }
 
-        // Step 2: Find employees with no assignments from step 1
+        // Step 2: Assign remaining leads based on language OR location
         const assignedEmpIds = new Set([...employeeMap.keys()]);
         const employeesWithNoStep1Assignments = employees.filter(
           (emp) => !assignedEmpIds.has(emp._id.toString())
         );
 
-        // Step 3: Match by either language OR location & distribute equally
         const eligibleEmpLeadsMap = new Map(); // empId => []
         for (const emp of employeesWithNoStep1Assignments) {
           eligibleEmpLeadsMap.set(emp._id.toString(), []);
@@ -101,16 +107,14 @@ export const saveToDb = async (req, res) => {
             )[0];
 
             const empId = leastAssignedEmp._id.toString();
-            const leadDoc = { ...lead, AssignedTo: leastAssignedEmp._id };
+            const leadDoc = { ...lead, AssignedTo: leastAssignedEmp._id, fileName };
             eligibleEmpLeadsMap.get(empId).push(leadDoc);
           }
         }
 
-        // Merge both employee maps
+        // Merge step 2 into main employeeMap
         for (const [empId, leads] of eligibleEmpLeadsMap.entries()) {
-          if (!employeeMap.has(empId)) {
-            employeeMap.set(empId, []);
-          }
+          if (!employeeMap.has(empId)) employeeMap.set(empId, []);
           employeeMap.get(empId).push(...leads);
         }
 
@@ -119,31 +123,42 @@ export const saveToDb = async (req, res) => {
           finalLeads.push(...leads);
         }
 
-        // Handle totally unassigned leads (no match even in Step 3)
+        // Handle completely unassigned
         const totalAssignedEmails = new Set(finalLeads.map((l) => l.email));
         const completelyUnassigned = rawLeads
           .filter((l) => !totalAssignedEmails.has(l.email))
-          .map((l) => ({ ...l, AssignedTo: null }));
+          .map((l) => ({ ...l, AssignedTo: null, fileName }));
         finalLeads.push(...completelyUnassigned);
 
-        // Add fileName to all leads before saving
-        const leadsWithFileName = finalLeads.map((lead) => ({
-          ...lead,
-          fileName,
-        }));
+        // Insert all leads
+        const insertedLeads = await Lead.insertMany(finalLeads);
 
-        // Save all leads
-        const insertedLeads = await Lead.insertMany(leadsWithFileName);
-
-        // Update assignedChats for each employee
+        // Assign leads to employees, update assignedChats, add recent activity and admin log
         for (const [empId, leads] of employeeMap.entries()) {
           const leadIds = leads
             .map((l) => insertedLeads.find((ins) => ins.email === l.email)?._id)
             .filter(Boolean);
 
           if (leadIds.length > 0) {
+            const employee = await Employee.findById(empId);
+
             await Employee.findByIdAndUpdate(empId, {
-              $push: { assignedChats: { $each: leadIds } },
+              $push: {
+                assignedChats: { $each: leadIds },
+                recentActivities: {
+                  $each: [
+                    {
+                      message: `You were assigned ${leadIds.length} new lead(s)`,
+                      timestamp: new Date(),
+                    },
+                  ],
+                  $slice: -10,
+                },
+              },
+            });
+
+            await AdminActivity.create({
+              message: `You have assigned ${leadIds.length} new lead(s) to ${employee.firstName} ${employee.lastName}`,
             });
           }
         }
@@ -154,18 +169,22 @@ export const saveToDb = async (req, res) => {
           total: insertedLeads.length,
           assigned: insertedLeads.filter((l) => l.AssignedTo).length,
           unAssigned: insertedLeads.filter((l) => !l.AssignedTo).length,
+          closed: 0,
         });
 
         fs.unlinkSync(filePath);
-        res.status(200).json({
+
+        return res.status(200).json({
           message: `${insertedLeads.length} leads saved successfully.`,
         });
       });
   } catch (error) {
     console.error("saveToDb Error:", error);
-    res.status(500).json({ message: "Failed to save leads to DB." });
+    return res.status(500).json({ message: "Failed to save leads to DB." });
   }
 };
+
+
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -285,14 +304,54 @@ export const updateLeadType = async (req, res) => {
 
 export const updateLeadStatus = async (req, res) => {
   try {
-    console.log(req.body)
     const { id } = req.body;
+
     const lead = await Lead.findById(id);
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
     }
+
+    // Update lead status
     lead.status = "Closed";
     await lead.save();
+
+    // Update closed count in LeadFile
+    const file = await LeadFile.findOne({ name: lead.fileName });
+    if (file) {
+      file.closed = (file.closed || 0) + 1;
+      await file.save();
+    }
+
+    // If the lead was assigned, update employee's closedChats and activity
+    if (lead.AssignedTo) {
+      const employee = await Employee.findById(lead.AssignedTo);
+      if (employee) {
+        // Add to closedChats
+        employee.closedChats.push(lead._id);
+
+        // Push recent activity
+        employee.recentActivities.push({
+          message: "You have closed a lead",
+          timestamp: new Date(),
+        });
+
+        // Limit recent activities to last 10
+        if (employee.recentActivities.length > 10) {
+          employee.recentActivities = employee.recentActivities.slice(
+            -10
+          );
+        }
+
+        await employee.save();
+
+        // Log admin activity (with employee name)
+        const empName = `${employee.firstName} ${employee.lastName}`;
+        await AdminActivity.create({
+          message: `${empName} has closed a lead`,
+        });
+      }
+    }
+
     return res
       .status(200)
       .json({ message: "Lead status updated successfully" });
@@ -303,3 +362,4 @@ export const updateLeadStatus = async (req, res) => {
       .json({ message: "Server error updating lead status" });
   }
 };
+

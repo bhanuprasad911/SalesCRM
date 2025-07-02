@@ -1,11 +1,10 @@
-// models/Employee.js
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const BreakSchema = new mongoose.Schema(
   {
-    breakStartTime: String, // e.g., "1:00 PM"
-    breakEndTime: String, // e.g., "1:30 PM"
+    breakStartTime: String,
+    breakEndTime: String,
   },
   { _id: false }
 );
@@ -20,6 +19,17 @@ const HistorySchema = new mongoose.Schema(
   { _id: false }
 );
 
+const ActivitySchema = new mongoose.Schema(
+  {
+    message: String,
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
 const EmployeeSchema = new mongoose.Schema(
   {
     firstName: String,
@@ -28,7 +38,11 @@ const EmployeeSchema = new mongoose.Schema(
     password: { type: String, required: true },
     location: String,
     language: String,
-    status: { type: String, enum: ["Active", "Inactive"], default: "Inactive" },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Inactive",
+    },
     assignedChats: {
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Leads" }],
       default: [],
@@ -38,9 +52,17 @@ const EmployeeSchema = new mongoose.Schema(
       default: [],
     },
     history: [HistorySchema],
+
+    // ✅ Recent activities (lead assigned or closed)
+    recentActivities: {
+      type: [ActivitySchema],
+      default: [],
+    },
   },
   { timestamps: true }
 );
+
+// 🔒 Hash password before saving
 EmployeeSchema.pre("save", async function (next) {
   try {
     if (this.isModified("password")) {

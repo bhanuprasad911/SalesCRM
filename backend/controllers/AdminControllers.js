@@ -69,20 +69,29 @@ export const adminMe = async (req, res) => {
   }
 };
 
-export const updatePassword = async (req, res) =>{
+export const updatePassword = async (req, res) => {
   const id = req.user.id;
-  console.log(req.body)
+  console.log(req.body);
   const { password } = req.body;
   try {
     const admin = await Admin.findById(id);
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
-      }
-      admin.password = password;
-      await admin.save();
-      res.status(200).json({ message: "Password updated" });
-      } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: error.message });
-        }
-}
+    }
+    admin.password = password;
+    await admin.save();
+    res.status(200).json({ message: "Password updated" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+export const getRecentAcctivity = async (req, res) => {
+  try {
+    const response = await Activity.find().sort({ createdAt: -1 }).limit(10);
+    res.status(200).json(response);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};

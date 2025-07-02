@@ -79,7 +79,7 @@ function formatDateToDDMMYYYY(dateString) {
                   <p className={style.loc}>{lead.total}</p>
                   <p className={style.lan}>{lead.assigned}</p>
                   <p className={style.lan1}>{lead.unAssigned}</p>
-                  <p className={style.lan2}>0</p>
+                  <p className={style.lan2}>{lead.closed}</p>
                 </div>
               ))
             )}

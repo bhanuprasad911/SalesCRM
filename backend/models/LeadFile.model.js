@@ -20,7 +20,7 @@ const LeadFileSchema = new mongoose.Schema({
     },
     closed:{
         type:Number,
-        required:true
+        default:0
     }
 }, {timestamps:true})
 
