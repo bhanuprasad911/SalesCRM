@@ -26,11 +26,11 @@ const LeadSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['Hot', 'Warm', 'Cold'],
-    default: 'Cold' // Optional: fallback value
+    default: 'Warm' // Optional: fallback value
   },
   status: {
     type: String,
-    enum: ['Ongoing', 'Open', 'Closed'],
+    enum: ['Open', 'Closed'],
     default:'Open'
   },
   source: {
@@ -45,6 +45,10 @@ const LeadSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'employees',
     default: null
+  },
+  fileName:{
+    type:String,
+    required:true
   }
 }, {timestamps:true});
 

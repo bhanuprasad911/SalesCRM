@@ -8,6 +8,8 @@ import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
 import csvParser from "csv-parser";
 
+
+
 export const saveToDb = async (req, res) => {
   const { tempId, fileName } = req.body;
 
@@ -124,8 +126,14 @@ export const saveToDb = async (req, res) => {
           .map((l) => ({ ...l, AssignedTo: null }));
         finalLeads.push(...completelyUnassigned);
 
+        // Add fileName to all leads before saving
+        const leadsWithFileName = finalLeads.map((lead) => ({
+          ...lead,
+          fileName,
+        }));
+
         // Save all leads
-        const insertedLeads = await Lead.insertMany(finalLeads);
+        const insertedLeads = await Lead.insertMany(leadsWithFileName);
 
         // Update assignedChats for each employee
         for (const [empId, leads] of employeeMap.entries()) {
@@ -158,6 +166,7 @@ export const saveToDb = async (req, res) => {
     res.status(500).json({ message: "Failed to save leads to DB." });
   }
 };
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -218,7 +227,7 @@ export const cancelUploadTempFile = async (req, res) => {
     return res.status(500).json({ message: "Server error during file cancel" });
   }
 };
-export const getLeads = async (req, res) => {
+export const getLeadFiles = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
 
@@ -233,4 +242,64 @@ export const getLeads = async (req, res) => {
     currentPage: page,
     totalPages: Math.ceil(total / limit),
   });
+};
+
+export const updateNextAvavilable = async (req, res) => {
+  try {
+    const {id, time } = req.body;
+   
+    console.log(req.body)
+    const lead = await Lead.findById(id);
+    console.log(lead)
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+    lead.NextAvailable = time;
+    await lead.save();
+    return res
+      .status(200)
+      .json({ message: "Next available time updated successfully" });
+  } catch (error) {
+    console.error("Error updating next available time:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error updating next available time" });
+  }
+};
+
+export const updateLeadType = async (req, res) => {
+  try {
+    const { id, type } = req.body;
+    const lead = await Lead.findById(id);
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+    lead.type = type;
+    await lead.save();
+    return res.status(200).json({ message: "Lead type updated successfully" });
+  } catch (error) {
+    console.error("Error updating lead type:", error);
+    return res.status(500).json({ message: "Server error updating lead type" });
+  }
+};
+
+export const updateLeadStatus = async (req, res) => {
+  try {
+    console.log(req.body)
+    const { id } = req.body;
+    const lead = await Lead.findById(id);
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+    lead.status = "Closed";
+    await lead.save();
+    return res
+      .status(200)
+      .json({ message: "Lead status updated successfully" });
+  } catch (error) {
+    console.error("Error updating lead status:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error updating lead status" });
+  }
 };

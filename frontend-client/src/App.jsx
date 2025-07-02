@@ -32,7 +32,7 @@ const Layout = ({ children }) => {
 
 const LayoutWrapper = () => {
   // useLogoutOnTabCLose()
-  useTabCloseLogout()
+  // useTabCloseLogout()
 
   return (
     <Layout>

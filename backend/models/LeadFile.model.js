@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 const LeadFileSchema = new mongoose.Schema({
     name:{
         type:String,
-        required:true
+        required:true,
+        unique:true
     },
     total:{
         type:Number,
@@ -14,6 +15,10 @@ const LeadFileSchema = new mongoose.Schema({
         required:true
     },
     unAssigned:{
+        type:Number,
+        required:true
+    },
+    closed:{
         type:Number,
         required:true
     }

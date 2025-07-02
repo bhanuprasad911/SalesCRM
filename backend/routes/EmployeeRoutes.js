@@ -1,6 +1,7 @@
 import express from "express";
 import {
   deleteEmp,
+  getAssignedleads,
   getEmployeeDetails,
   getEmployeeDetailsById,
   getMe,
@@ -23,6 +24,7 @@ empRouter.post("/logout", logout);
 empRouter.get("/me", authMiddleware, getMe);
 empRouter.post("/updatePassword", authMiddleware, updatePassword);
 empRouter.patch("/updateStatus", authMiddleware, updateCheckStatus);
+empRouter.get("/getAssigned", authMiddleware, getAssignedleads)
 
 
 empRouter.get("/", getEmployeeDetails);

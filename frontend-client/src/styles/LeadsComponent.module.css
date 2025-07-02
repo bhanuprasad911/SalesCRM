@@ -1,0 +1,186 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+.main {
+  position: relative;
+  width: 100%;
+  height: 28.6%;
+  /* border: 1px solid black; */
+  /* overflow-x: auto; */
+  margin-bottom: 6%;
+  background-color: rgb(238, 238, 238);
+  border-radius: 15px;
+  padding: 2% 4%;
+  display: flex;
+  overflow: visible;
+}
+.left {
+  width: 65%;
+  height: 100%;
+  /* border: 1px solid blue; */
+}
+.right {
+  width: 35%;
+  height: 100%;
+  /* border: 1px solid red; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.leftTop {
+  height: 40%;
+  width: 100%;
+  /* border: 1px solid green; */
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-evenly;
+  flex-direction: column;
+}
+.email {
+  color: grey;
+  font-size: small;
+}
+.name {
+  font-size: medium;
+  color: black;
+}
+.dateHeading {
+  color: rgb(111, 117, 127);
+}
+.date {
+  color: rgb(68, 86, 104);
+}
+.leftBottom {
+  height: 60%;
+  width: 100%;
+  /* border: 1px solid yellow; */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-evenly;
+}
+.rightTop {
+  height: 70%;
+  width: 75%;
+  border: 10px solid purple;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.hot {
+  border: 10px solid rgb(232, 111, 11);
+}
+.warm {
+  border: 10px solid rgb(247, 211, 7);
+}
+.cold {
+  border: 10px solid rgb(125, 241, 247);
+}
+
+.rightBottom {
+  height: 30%;
+  width: 100%;
+  /* border: 1px solid pink; */
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgb(40, 92, 229);
+}
+.typeDiv {
+  padding: 2%;
+  position: absolute;
+  background-color: white;
+  width: 5vw;
+  height: 18vh;
+  top: 78%;
+  left: 47%;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px grey;
+}
+.Typebutton {
+  /* width: 80%; */
+  padding: 0.5rem;
+  width: 80%;
+  border-radius: 5px;
+  color: white;
+}
+.Typehot {
+  background-color: rgb(232, 111, 11);
+}
+.Typewarm {
+  background-color: rgb(247, 211, 7);
+}
+.Typecold {
+  background-color: rgb(125, 241, 247);
+}
+.dateDiv{
+    position: absolute;
+    top: 78%;
+    left: 36%;
+    background-color: white;
+    width: 10vw;
+    height: 22vh;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    padding: 2%;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px grey;
+
+}
+.input{
+    width: 80%;
+    padding: 5%;
+    /* border: 1px solid grey; */
+    border-radius: 5px
+}
+.p{
+    width: 100%;
+    text-align: left;
+}
+.statusDiv{
+     position: absolute;
+    top: 78%;
+    left: 48%;
+    background-color: white;
+    width: 10vw;
+    height: 18vh;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 40%;
+    padding: 2%;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px grey;
+
+}
+.select{
+    width: 80%;
+    padding: 0.6rem;
+    font-size: medium
+}
+.saveButton{
+    width: 80%;
+    padding: 0.8rem;
+    border-radius: 50px;
+    font-size: medium;
+}

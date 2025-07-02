@@ -1,7 +1,9 @@
 import Employee from "../models/Employee.model.js";
+import Lead from "../models/Lead.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv'
+import mongoose from "mongoose";
 dotenv.config()
 const secret = process.env.SECRET;
 
@@ -239,6 +241,23 @@ export const updatePassword = async(req,res)=>{
     console.log("error in updating password", error)
     return res.status(500).json({message:error.message})
     
+  }
+}
+
+export const getAssignedleads = async (req, res) =>{
+  try {
+    console.log("Decoded User from Token:", req.user);
+
+    // ✅ FIX: use `new` when creating ObjectId
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    console.log(userId)
+
+    const leads = await Lead.find({ AssignedTo: userId });
+
+    res.status(200).json(leads);
+  } catch (error) {
+    console.error("Error in getting assigned leads:", error);
+    res.status(500).json({ message: error.message });
   }
 }
 
