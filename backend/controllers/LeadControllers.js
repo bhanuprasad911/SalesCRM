@@ -478,44 +478,5 @@ export const getClosedChatsLast10Days = async (req, res) => {
   }
 };
 
-export const removeLeadsFromEmployees = async (req, res) => {
-  const { fileName } = req.body;
-  console.log(req.body)
 
-  if (!fileName) {
-    return res.status(400).json({ message: "fileName is required" });
-  }
-
-  try {
-    // Step 1: Find all lead IDs with the given file name
-    const leads = await Lead.find({ fileName }, { _id: 1 });
-    const leadIds = leads.map((lead) => lead._id);
-
-    if (leadIds.length === 0) {
-      return res.status(404).json({ message: "No leads found with that fileName" });
-    }
-
-    // Step 2: Remove lead references from all employees
-    const updateEmployees = await Employee.updateMany(
-      {},
-      { $pull: { assignedChats: { $in: leadIds }, closedChats: { $in: leadIds } } }
-    );
-
-    // Step 3: Delete leads with the given file name
-    const deleteLeads = await Lead.deleteMany({ _id: { $in: leadIds } });
-
-    // Step 4: Delete the lead file record
-    const deleteFileRecord = await LeadFile.deleteOne({ name: fileName });
-
-    return res.status(200).json({
-      message: `Leads and related references for '${fileName}' deleted successfully.`,
-      removedFromEmployees: updateEmployees.modifiedCount,
-      leadsDeleted: deleteLeads.deletedCount,
-      fileDeleted: deleteFileRecord.deletedCount,
-    });
-  } catch (error) {
-    console.error("Error in lead cleanup:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
 
