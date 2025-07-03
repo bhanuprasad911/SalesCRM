@@ -22,7 +22,9 @@ export const saveToDb = async (req, res) => {
 
   const existingFile = await LeadFile.findOne({ name: fileName });
   if (existingFile) {
-    return res.status(409).json({ message: "File with this name already exists" });
+    return res
+      .status(409)
+      .json({ message: "File with this name already exists" });
   }
 
   const rawLeads = [];
@@ -38,15 +40,30 @@ export const saveToDb = async (req, res) => {
             return res.status(400).json({ message: "CSV file is empty" });
           }
 
-          const requiredFields = ["name", "email", "phone", "location", "language", "source", "NextAvailable"];
-          const invalid = rawLeads.find((lead) => requiredFields.some((f) => !lead[f]));
+          const requiredFields = [
+            "name",
+            "email",
+            "phone",
+            "location",
+            "language",
+            "source",
+            "NextAvailable",
+          ];
+          const invalid = rawLeads.find((lead) =>
+            requiredFields.some((f) => !lead[f])
+          );
           if (invalid) {
             fs.unlinkSync(filePath);
-            return res.status(400).json({ message: "Missing fields in CSV data" });
+            return res
+              .status(400)
+              .json({ message: "Missing fields in CSV data" });
           }
 
           const emails = rawLeads.map((lead) => lead.email);
-          const existingLeads = await Lead.find({ email: { $in: emails } }, { email: 1 });
+          const existingLeads = await Lead.find(
+            { email: { $in: emails } },
+            { email: 1 }
+          );
           const duplicateEmails = existingLeads.map((l) => l.email);
 
           if (duplicateEmails.length > 0) {
@@ -59,7 +76,11 @@ export const saveToDb = async (req, res) => {
 
           const employees = await Employee.find();
           if (employees.length === 0) {
-            const unassignedLeads = rawLeads.map((lead) => ({ ...lead, AssignedTo: null, fileName }));
+            const unassignedLeads = rawLeads.map((lead) => ({
+              ...lead,
+              AssignedTo: null,
+              fileName,
+            }));
             await Lead.insertMany(unassignedLeads);
             await LeadFile.create({
               name: fileName,
@@ -69,7 +90,9 @@ export const saveToDb = async (req, res) => {
               closed: 0,
             });
             fs.unlinkSync(filePath);
-            return res.status(200).json({ message: "No employees found. All leads saved as unassigned." });
+            return res.status(200).json({
+              message: "No employees found. All leads saved as unassigned.",
+            });
           }
 
           const employeeMap = new Map();
@@ -78,7 +101,10 @@ export const saveToDb = async (req, res) => {
 
           // 1. Match both
           for (const lead of rawLeads) {
-            const match = employees.find(emp => emp.language === lead.language && emp.location === lead.location);
+            const match = employees.find(
+              (emp) =>
+                emp.language === lead.language && emp.location === lead.location
+            );
             if (match) {
               const empId = match._id.toString();
               if (!employeeMap.has(empId)) employeeMap.set(empId, []);
@@ -93,22 +119,33 @@ export const saveToDb = async (req, res) => {
           // 2. Match either
           const stillRemainingLeads = [];
           for (const lead of remainingLeads) {
-            const matchingEmps = employees.filter(emp =>
-              emp.language === lead.language || emp.location === lead.location
+            const matchingEmps = employees.filter(
+              (emp) =>
+                emp.language === lead.language || emp.location === lead.location
             );
             if (matchingEmps.length > 0) {
-              const empAssignments = Array.from(employeeMap.entries()).map(([id, leads]) => ({
-                empId: id,
-                count: leads.length,
-              }));
-              const empCounts = employees.map(emp => {
-                const entry = empAssignments.find(e => e.empId === emp._id.toString());
+              const empAssignments = Array.from(employeeMap.entries()).map(
+                ([id, leads]) => ({
+                  empId: id,
+                  count: leads.length,
+                })
+              );
+              const empCounts = employees.map((emp) => {
+                const entry = empAssignments.find(
+                  (e) => e.empId === emp._id.toString()
+                );
                 return { emp, count: entry ? entry.count : 0 };
               });
-              const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
+              const leastAssignedEmp = empCounts.sort(
+                (a, b) => a.count - b.count
+              )[0].emp;
               const empId = leastAssignedEmp._id.toString();
               if (!employeeMap.has(empId)) employeeMap.set(empId, []);
-              const doc = { ...lead, AssignedTo: leastAssignedEmp._id, fileName };
+              const doc = {
+                ...lead,
+                AssignedTo: leastAssignedEmp._id,
+                fileName,
+              };
               employeeMap.get(empId).push(doc);
               assignedLeads.push(doc);
             } else {
@@ -118,15 +155,21 @@ export const saveToDb = async (req, res) => {
 
           // 3. Round robin
           for (const lead of stillRemainingLeads) {
-            const empAssignments = Array.from(employeeMap.entries()).map(([id, leads]) => ({
-              empId: id,
-              count: leads.length,
-            }));
-            const empCounts = employees.map(emp => {
-              const entry = empAssignments.find(e => e.empId === emp._id.toString());
+            const empAssignments = Array.from(employeeMap.entries()).map(
+              ([id, leads]) => ({
+                empId: id,
+                count: leads.length,
+              })
+            );
+            const empCounts = employees.map((emp) => {
+              const entry = empAssignments.find(
+                (e) => e.empId === emp._id.toString()
+              );
               return { emp, count: entry ? entry.count : 0 };
             });
-            const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
+            const leastAssignedEmp = empCounts.sort(
+              (a, b) => a.count - b.count
+            )[0].emp;
             const empId = leastAssignedEmp._id.toString();
             if (!employeeMap.has(empId)) employeeMap.set(empId, []);
             const doc = { ...lead, AssignedTo: leastAssignedEmp._id, fileName };
@@ -140,7 +183,9 @@ export const saveToDb = async (req, res) => {
           // Update employee stats
           for (const [empId, leads] of employeeMap.entries()) {
             const leadIds = leads
-              .map((l) => insertedLeads.find((ins) => ins.email === l.email)?._id)
+              .map(
+                (l) => insertedLeads.find((ins) => ins.email === l.email)?._id
+              )
               .filter(Boolean);
             if (leadIds.length > 0) {
               const employee = await Employee.findById(empId);
@@ -173,11 +218,15 @@ export const saveToDb = async (req, res) => {
           });
 
           fs.unlinkSync(filePath);
-          return res.status(200).json({ message: `${insertedLeads.length} leads saved successfully.` });
+          return res.status(200).json({
+            message: `${insertedLeads.length} leads saved successfully.`,
+          });
         } catch (innerErr) {
           console.error("Inner saveToDb error:", innerErr);
           fs.existsSync(filePath) && fs.unlinkSync(filePath);
-          return res.status(500).json({ message: "Failed to process and save leads" });
+          return res
+            .status(500)
+            .json({ message: "Failed to process and save leads" });
         }
       })
       .on("error", (err) => {
@@ -190,11 +239,6 @@ export const saveToDb = async (req, res) => {
     return res.status(500).json({ message: "Unexpected failure" });
   }
 };
-
-
-
-
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -232,15 +276,30 @@ export const uploadTempFile = async (req, res) => {
             return res.status(400).json({ message: "CSV file is empty" });
           }
 
-          const requiredFields = ["name", "email", "phone", "location", "language", "source", "NextAvailable"];
-          const missing = leads.find((lead) => requiredFields.some((f) => !lead[f]));
+          const requiredFields = [
+            "name",
+            "email",
+            "phone",
+            "location",
+            "language",
+            "source",
+            "NextAvailable",
+          ];
+          const missing = leads.find((lead) =>
+            requiredFields.some((f) => !lead[f])
+          );
           if (missing) {
             fs.unlinkSync(filePath);
-            return res.status(400).json({ message: "Missing required fields in CSV" });
+            return res
+              .status(400)
+              .json({ message: "Missing required fields in CSV" });
           }
 
           const emails = leads.map((l) => l.email);
-          const existing = await Lead.find({ email: { $in: emails } }, { email: 1 });
+          const existing = await Lead.find(
+            { email: { $in: emails } },
+            { email: 1 }
+          );
           const duplicates = existing.map((d) => d.email);
 
           if (duplicates.length > 0) {
@@ -258,7 +317,9 @@ export const uploadTempFile = async (req, res) => {
         } catch (err) {
           console.error("Verification error:", err);
           fs.existsSync(filePath) && fs.unlinkSync(filePath);
-          return res.status(500).json({ message: "Internal verification error" });
+          return res
+            .status(500)
+            .json({ message: "Internal verification error" });
         }
       })
       .on("error", (err) => {
@@ -295,16 +356,17 @@ export const cancelUploadTempFile = async (req, res) => {
     return res.status(500).json({ message: "Server error during file cancel" });
   }
 };
-export const getAllLeadFiles = async (req, res) =>{
+export const getAllLeadFiles = async (req, res) => {
   try {
-    const result = await LeadFile.find()
-    res.status(200).json(result)
-    
-  }catch(error){
-    console.log(error)
-    return res.status(500).json({ message: "Server error while getting all lead files" });
+    const result = await LeadFile.find();
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Server error while getting all lead files" });
   }
-}
+};
 export const getLeadFiles = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -324,11 +386,11 @@ export const getLeadFiles = async (req, res) => {
 
 export const updateNextAvavilable = async (req, res) => {
   try {
-    const {id, time } = req.body;
-   
-    console.log(req.body)
+    const { id, time } = req.body;
+
+    console.log(req.body);
     const lead = await Lead.findById(id);
-    console.log(lead)
+    console.log(lead);
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
     }
@@ -396,9 +458,7 @@ export const updateLeadStatus = async (req, res) => {
 
         // Limit recent activities to last 10
         if (employee.recentActivities.length > 10) {
-          employee.recentActivities = employee.recentActivities.slice(
-            -10
-          );
+          employee.recentActivities = employee.recentActivities.slice(-10);
         }
 
         await employee.save();
@@ -421,8 +481,6 @@ export const updateLeadStatus = async (req, res) => {
       .json({ message: "Server error updating lead status" });
   }
 };
-
-
 
 export const getClosedChatsLast10Days = async (req, res) => {
   try {
@@ -477,6 +535,3 @@ export const getClosedChatsLast10Days = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
-

@@ -104,7 +104,7 @@ function LeadsComponent({ lead, leads, setLeads, refreshLeads }) {
 
       if (status === "Closed" && next > now) {
         toast.error("Scheduled lead cannot be closed");
-        setStatus("")
+        setStatus("");
         return;
       }
 

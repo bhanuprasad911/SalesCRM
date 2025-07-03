@@ -18,14 +18,12 @@ const empRouter = express.Router();
 
 empRouter.post("/signup", signup);
 empRouter.post("/login", login);
-empRouter.post("/logout",authMiddleware, logout);
-
+empRouter.post("/logout", authMiddleware, logout);
 
 empRouter.get("/me", authMiddleware, getMe);
 empRouter.post("/updatePassword", authMiddleware, updatePassword);
 empRouter.patch("/updateStatus", authMiddleware, updateCheckStatus);
-empRouter.get("/getAssigned", authMiddleware, getAssignedleads)
-
+empRouter.get("/getAssigned", authMiddleware, getAssignedleads);
 
 empRouter.get("/", getEmployeeDetails);
 empRouter.delete("/:id", deleteEmp);

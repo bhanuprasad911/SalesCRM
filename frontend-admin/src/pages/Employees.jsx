@@ -62,25 +62,24 @@ function Employees({ select }) {
   }, [sort, employees]);
 
   // ✅ Filter sorted employees using search text
-// ✅ Filter sorted employees by selected fields only
-const filtered = sorted.filter((emp) => {
-  const lowerSearch = search.toLowerCase();
-  const fullname = `${emp.firstName} ${emp.lastName}`;
+  // ✅ Filter sorted employees by selected fields only
+  const filtered = sorted.filter((emp) => {
+    const lowerSearch = search.toLowerCase();
+    const fullname = `${emp.firstName} ${emp.lastName}`;
 
-  const fieldsToCheck = [
-    emp._id,
-    fullname,
-    emp.email,
-    emp.status,
-    emp.assignedChats?.length,
-    emp.closedChats?.length,
-  ];
+    const fieldsToCheck = [
+      emp._id,
+      fullname,
+      emp.email,
+      emp.status,
+      emp.assignedChats?.length,
+      emp.closedChats?.length,
+    ];
 
-  return fieldsToCheck.some((field) =>
-    String(field).toLowerCase().includes(lowerSearch)
-  );
-});
-
+    return fieldsToCheck.some((field) =>
+      String(field).toLowerCase().includes(lowerSearch)
+    );
+  });
 
   // ✅ Pagination after filtering
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -98,7 +97,8 @@ const filtered = sorted.filter((emp) => {
   const handleSort = (field) => {
     setSort((prev) => ({
       field,
-      direction: prev.field === field && prev.direction === "asc" ? "desc" : "asc",
+      direction:
+        prev.field === field && prev.direction === "asc" ? "desc" : "asc",
     }));
   };
 
@@ -135,22 +135,61 @@ const filtered = sorted.filter((emp) => {
 
         <div className={style.body}>
           <div className={style.tableHead}>
-            <button className={`${style.button} ${style.name}`} onClick={() => handleSort("firstName")}>
-              Name {sort.field === "firstName" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+            <button
+              className={`${style.button} ${style.name}`}
+              onClick={() => handleSort("firstName")}
+            >
+              Name{" "}
+              {sort.field === "firstName"
+                ? sort.direction === "asc"
+                  ? "↑"
+                  : "↓"
+                : ""}
             </button>
             <button className={style.button} onClick={() => handleSort("_id")}>
-              Employee ID {sort.field === "_id" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+              Employee ID{" "}
+              {sort.field === "_id"
+                ? sort.direction === "asc"
+                  ? "↑"
+                  : "↓"
+                : ""}
             </button>
-            <button className={style.button} onClick={() => handleSort("assignedChats")}>
-              Assigned Leads {sort.field === "assignedChats" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+            <button
+              className={style.button}
+              onClick={() => handleSort("assignedChats")}
+            >
+              Assigned Leads{" "}
+              {sort.field === "assignedChats"
+                ? sort.direction === "asc"
+                  ? "↑"
+                  : "↓"
+                : ""}
             </button>
-            <button className={style.button} onClick={() => handleSort("closedChats")}>
-              Closed Leads {sort.field === "closedChats" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+            <button
+              className={style.button}
+              onClick={() => handleSort("closedChats")}
+            >
+              Closed Leads{" "}
+              {sort.field === "closedChats"
+                ? sort.direction === "asc"
+                  ? "↑"
+                  : "↓"
+                : ""}
             </button>
-            <button className={style.button} onClick={() => handleSort("status")}>
-              Status {sort.field === "status" ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+            <button
+              className={style.button}
+              onClick={() => handleSort("status")}
+            >
+              Status{" "}
+              {sort.field === "status"
+                ? sort.direction === "asc"
+                  ? "↑"
+                  : "↓"
+                : ""}
             </button>
-            <button className={`${style.button} ${style.options}`}>Options</button>
+            <button className={`${style.button} ${style.options}`}>
+              Options
+            </button>
           </div>
 
           {currentEmployees.length === 0 ? (

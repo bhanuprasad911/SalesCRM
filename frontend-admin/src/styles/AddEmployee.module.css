@@ -1,76 +1,74 @@
-*{
-padding: 0;
-margin: 0;
-box-sizing: border-box;
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
-.main{
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    background-color: rgba(129, 126, 126, 0.8);
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
+.main {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(129, 126, 126, 0.8);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
 }
-.form{
-    width: 100%;
-    height: 100%;
-    /* border: 1px solid black; */
-    margin-top: 2vh;
-    
+.form {
+  width: 100%;
+  height: 100%;
+  /* border: 1px solid black; */
+  margin-top: 2vh;
 }
-.innerMain{
-    background-color: white;
-    height: 90vh;
-    width: 80vw;
-    box-shadow: 0px 0px 10px grey;
-    /* margin-top: 5%; */
-    padding: 2% 2%;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    flex-direction: column;
-    border-radius: 20px;
+.innerMain {
+  background-color: white;
+  height: 90vh;
+  width: 80vw;
+  box-shadow: 0px 0px 10px grey;
+  /* margin-top: 5%; */
+  padding: 2% 2%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+  border-radius: 20px;
 }
-.title{
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
- 
+.title {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.input{
-    width: 40%;
-    padding: 0.6rem;
-    font-size: medium;
-    border: 2px solid grey;
-    outline: none;
-    border-radius: 10px;
+.input {
+  width: 40%;
+  padding: 0.6rem;
+  font-size: medium;
+  border: 2px solid grey;
+  outline: none;
+  border-radius: 10px;
 }
-.label{
-    color:grey ;
-    font-size: large;
+.label {
+  color: grey;
+  font-size: large;
 }
 
-.saveButton{
-    padding: 0.6rem;
-    width: 10%;
-    font-size: 1rem;
-    cursor: pointer;
-    color: rgb(91, 91, 91);
-    border-radius: 10px;
+.saveButton {
+  padding: 0.6rem;
+  width: 10%;
+  font-size: 1rem;
+  cursor: pointer;
+  color: rgb(91, 91, 91);
+  border-radius: 10px;
 }
-.buttonDiv{
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: flex-end;
+.buttonDiv {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-end;
 }
-.closeButton{
-    background: none;
-    font-size: large;
-    cursor: pointer;
+.closeButton {
+  background: none;
+  font-size: large;
+  cursor: pointer;
 }

@@ -1,11 +1,11 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { getAdminDetails } from '../services/api.js';
-import { useLocation } from 'react-router';
+import { createContext, useContext, useEffect, useState } from "react";
+import { getAdminDetails } from "../services/api.js";
+import { useLocation } from "react-router";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const location = useLocation
+  const location = useLocation;
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const path = location.pathname;

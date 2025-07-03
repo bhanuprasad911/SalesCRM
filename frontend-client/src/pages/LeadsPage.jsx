@@ -40,17 +40,20 @@ function LeadsPage() {
     const query = search.toLowerCase();
 
     return Object.entries(lead).some(([key, value]) => {
-      if (typeof value === "string" && value.toLowerCase().includes(query)) return true;
+      if (typeof value === "string" && value.toLowerCase().includes(query))
+        return true;
 
       if (
         ["NextAvailable", "createdAt", "updatedAt"].includes(key) &&
         typeof value === "string"
       ) {
-        const formatted = new Date(value).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }).toLowerCase();
+        const formatted = new Date(value)
+          .toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+          .toLowerCase();
         return formatted.includes(query);
       }
 

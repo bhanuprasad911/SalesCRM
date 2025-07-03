@@ -36,7 +36,9 @@ function SchedulePage() {
   useEffect(() => {
     const getLeads = async () => {
       const response = await getLeadsAssigned();
-      const notClosed = response.data.filter((lead) => lead.status !== "Closed");
+      const notClosed = response.data.filter(
+        (lead) => lead.status !== "Closed"
+      );
       const sorted = notClosed.sort(
         (a, b) => new Date(a.NextAvailable) - new Date(b.NextAvailable)
       );
@@ -53,33 +55,33 @@ function SchedulePage() {
   }
 
   // 🔍 Function to filter based on search input across all fields
-const searchedLeads = filteredLeads.filter((lead) => {
-  const query = search.toLowerCase();
+  const searchedLeads = filteredLeads.filter((lead) => {
+    const query = search.toLowerCase();
 
-  return Object.entries(lead).some(([key, value]) => {
-    // Search through all string fields
-    if (typeof value === "string" && value.toLowerCase().includes(query)) {
-      return true;
-    }
+    return Object.entries(lead).some(([key, value]) => {
+      // Search through all string fields
+      if (typeof value === "string" && value.toLowerCase().includes(query)) {
+        return true;
+      }
 
-    // Match dates (NextAvailable, createdAt, updatedAt) formatted to "Month Day, Year"
-    if (
-      ["NextAvailable", "createdAt", "updatedAt"].includes(key) &&
-      typeof value === "string"
-    ) {
-      const formatted = new Date(value).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }).toLowerCase();
-      return formatted.includes(query);
-    }
+      // Match dates (NextAvailable, createdAt, updatedAt) formatted to "Month Day, Year"
+      if (
+        ["NextAvailable", "createdAt", "updatedAt"].includes(key) &&
+        typeof value === "string"
+      ) {
+        const formatted = new Date(value)
+          .toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+          .toLowerCase();
+        return formatted.includes(query);
+      }
 
-    return false;
+      return false;
+    });
   });
-});
-
-
 
   return (
     <div className={style.main}>

@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 
 function useExecuteLogoutOnUserLeave(logoutUser, delayInMs = 5 * 60 * 1000) {
   const timeoutRef = useRef(null);
-  console.log("executing the logout on leave")
+  console.log("executing the logout on leave");
 
   const startTimer = () => {
     if (!timeoutRef.current) {

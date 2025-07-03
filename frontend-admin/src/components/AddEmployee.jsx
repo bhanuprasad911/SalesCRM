@@ -99,7 +99,6 @@ function AddEmployee(props) {
           />
           <br />
           <br />
-          
 
           <label className={style.label}>Last name</label>
           <br />
@@ -113,7 +112,6 @@ function AddEmployee(props) {
           />
           <br />
           <br />
-        
 
           <label className={style.label}>Email</label>
           <br />
@@ -128,7 +126,6 @@ function AddEmployee(props) {
           />
           <br />
           <br />
-      
 
           <label className={style.label}>Location</label>
           <br />
@@ -149,7 +146,6 @@ function AddEmployee(props) {
           </select>
           <br />
           <br />
-       
 
           <label className={style.label}>Preferred language</label>
           <br />
@@ -171,7 +167,6 @@ function AddEmployee(props) {
           <br />
           <br />
           <br />
-         
 
           <div className={style.buttonDiv}>
             <button className={style.saveButton} onClick={handleSave}>

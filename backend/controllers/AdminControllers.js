@@ -55,7 +55,6 @@ export const login = async (req, res) => {
   }
 };
 
-
 export const adminMe = async (req, res) => {
   const id = req.user.id;
   try {

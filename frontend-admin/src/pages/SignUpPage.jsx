@@ -1,39 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import style from '../styles/SignupPage.module.css';
-import { adminLogin, adminSignup, getAdminDetails } from '../services/api';
-import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React, { useEffect, useState } from "react";
+import style from "../styles/SignupPage.module.css";
+import { adminLogin, adminSignup, getAdminDetails } from "../services/api";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function SignUpPage() {
-  const [op, setOP] = useState('login');
+  const [op, setOP] = useState("login");
   const navigate = useNavigate();
   const { setAdmin } = useAuth(); // Get setAdmin from context
 
   const [loginData, setLoginData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
 
   const [signupData, setSignupData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const handleloginChange = (e) => {
-    setLoginData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setLoginData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSignupChange = (e) => {
-    setSignupData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setSignupData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSigup = async () => {
     try {
-      const { firstName, lastName, email, password, confirmPassword } = signupData;
+      const { firstName, lastName, email, password, confirmPassword } =
+        signupData;
 
       if (
         !firstName.trim() ||
@@ -53,68 +54,67 @@ function SignUpPage() {
 
       const response = await adminSignup(signupData);
       toast.success(response.data.message);
-      setOP('login');
+      setOP("login");
     } catch (error) {
-      console.log('Signup error:', error);
-      toast.error('Signup failed');
+      console.log("Signup error:", error);
+      toast.error("Signup failed");
     }
   };
 
- const handleLogin = async () => {
-  try {
-    const { email, password } = loginData;
-    if (!email.trim() || !password.trim()) {
-      toast.error("Please fill all the fields");
-      return;
+  const handleLogin = async () => {
+    try {
+      const { email, password } = loginData;
+      if (!email.trim() || !password.trim()) {
+        toast.error("Please fill all the fields");
+        return;
+      }
+
+      const loginRes = await adminLogin(loginData); // POST /admin/login
+      const { token } = loginRes.data;
+      sessionStorage.setItem("admintoken", token); // Save token
+
+      const res = await getAdminDetails(); // GET /admin/me with auth header
+      console.log(res.data.admin);
+      setAdmin(res.data.admin);
+
+      toast.success("Login successful");
+      navigate("/dashboard");
+    } catch (error) {
+      console.log("Login error:", error);
+      toast.error("Login failed");
     }
-
-    const loginRes = await adminLogin(loginData); // POST /admin/login
-    const { token } = loginRes.data;
-    sessionStorage.setItem("admintoken", token); // Save token
-
-    const res = await getAdminDetails(); // GET /admin/me with auth header
-    console.log(res.data.admin);
-    setAdmin(res.data.admin);
-
-    toast.success("Login successful");
-    navigate("/dashboard");
-  } catch (error) {
-    console.log("Login error:", error);
-    toast.error("Login failed");
-  }
-};
-
+  };
 
   useEffect(() => {
-    setLoginData({ email: '', password: '' });
+    setLoginData({ email: "", password: "" });
     setSignupData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     });
   }, [op]);
 
   return (
     <div className={style.main}>
-      {op === 'login' ? (
+      {op === "login" ? (
         <>
           <input
-            name='email'
+            name="email"
             value={loginData.email}
             onChange={handleloginChange}
             className={style.input}
-            type='email'
-            placeholder='Email'
+            type="email"
+            placeholder="Email"
           />
           <input
-            name='password'
+            name="password"
             value={loginData.password}
             onChange={handleloginChange}
             className={style.input}
-            type='password'
-            placeholder='Password'
+            type="password"
+            placeholder="Password"
           />
           <button onClick={handleLogin} className={style.button}>
             Login
@@ -123,44 +123,44 @@ function SignUpPage() {
       ) : (
         <>
           <input
-            name='firstName'
+            name="firstName"
             value={signupData.firstName}
             onChange={handleSignupChange}
             className={style.input}
-            placeholder='First name'
-            type='text'
+            placeholder="First name"
+            type="text"
           />
           <input
-            name='lastName'
+            name="lastName"
             value={signupData.lastName}
             onChange={handleSignupChange}
             className={style.input}
-            placeholder='Last name'
-            type='text'
+            placeholder="Last name"
+            type="text"
           />
           <input
-            name='email'
+            name="email"
             value={signupData.email}
             onChange={handleSignupChange}
             className={style.input}
-            placeholder='Email'
-            type='email'
+            placeholder="Email"
+            type="email"
           />
           <input
-            name='password'
+            name="password"
             value={signupData.password}
             onChange={handleSignupChange}
             className={style.input}
-            placeholder='Password'
-            type='password'
+            placeholder="Password"
+            type="password"
           />
           <input
-            name='confirmPassword'
+            name="confirmPassword"
             value={signupData.confirmPassword}
             onChange={handleSignupChange}
             className={style.input}
-            placeholder='Confirm password'
-            type='password'
+            placeholder="Confirm password"
+            type="password"
           />
           <button onClick={handleSigup} className={style.button}>
             Sign up
@@ -169,9 +169,9 @@ function SignUpPage() {
       )}
       <button
         className={style.link}
-        onClick={() => setOP(prev => (prev === 'login' ? 'signup' : 'login'))}
+        onClick={() => setOP((prev) => (prev === "login" ? "signup" : "login"))}
       >
-        {op === 'login' ? 'New here? Signup' : 'Already have an account? Login'}
+        {op === "login" ? "New here? Signup" : "Already have an account? Login"}
       </button>
     </div>
   );

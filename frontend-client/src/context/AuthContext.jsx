@@ -1,7 +1,7 @@
 // context/AuthContext.js
-import { createContext, useContext, useState, useEffect } from 'react';
-import { fetchCurrentUser, logout as logoutAPI } from '../services/api.js'; // ⬅ rename logout to logoutAPI
-import { useLocation } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect } from "react";
+import { fetchCurrentUser, logout as logoutAPI } from "../services/api.js"; // ⬅ rename logout to logoutAPI
+import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast"; // optional
 
 const AuthContext = createContext();

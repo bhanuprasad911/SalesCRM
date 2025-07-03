@@ -1,7 +1,7 @@
-import axios from 'axios';
+import axios from "axios";
 
 const url = import.meta.env.VITE_BACKEND_URL;
-const backendUrl = url
+const backendUrl = url;
 
 console.log(backendUrl);
 
@@ -18,7 +18,7 @@ const axiosInstance = axios.create({
 // ✅ Add interceptor to attach token from sessionStorage
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = sessionStorage.getItem('admintoken');
+    const token = sessionStorage.getItem("admintoken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

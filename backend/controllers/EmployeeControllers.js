@@ -8,18 +8,21 @@ dotenv.config();
 const secret = process.env.SECRET;
 import { Activity as AdminActivity } from "../models/Admin.model.js";
 
-
 export const signup = async (req, res) => {
   try {
     const { firstName, lastName, email, location, language } = req.body;
 
     if (!firstName || !lastName || !email || !location || !language) {
-      return res.status(400).json({ message: "Please fill all the required fields" });
+      return res
+        .status(400)
+        .json({ message: "Please fill all the required fields" });
     }
 
     const exist = await Employee.findOne({ email });
     if (exist) {
-      return res.status(400).json({ message: "Employee with the given email already exists" });
+      return res
+        .status(400)
+        .json({ message: "Employee with the given email already exists" });
     }
 
     const newEmployee = new Employee({
@@ -69,13 +72,11 @@ export const signup = async (req, res) => {
       message: "Employee created successfully",
       data: result,
     });
-
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // controllers/authController.js
 export const login = async (req, res) => {
@@ -324,8 +325,6 @@ export const updateEmpDetails = async (req, res) => {
   }
 };
 
-
-
 export const deleteEmp = async (req, res) => {
   try {
     const { id } = req.params;
@@ -356,7 +355,8 @@ export const deleteEmp = async (req, res) => {
 
       for (const lead of assignedLeads) {
         const match = remainingEmployees.find(
-          (emp) => emp.language === lead.language && emp.location === lead.location
+          (emp) =>
+            emp.language === lead.language && emp.location === lead.location
         );
 
         if (match) {
@@ -373,21 +373,28 @@ export const deleteEmp = async (req, res) => {
 
       for (const lead of remainingLeads1) {
         const matching = remainingEmployees.filter(
-          (emp) => emp.language === lead.language || emp.location === lead.location
+          (emp) =>
+            emp.language === lead.language || emp.location === lead.location
         );
 
         if (matching.length > 0) {
-          const empAssignments = Array.from(employeeMap.entries()).map(([empId, leads]) => ({
-            empId,
-            count: leads.length,
-          }));
+          const empAssignments = Array.from(employeeMap.entries()).map(
+            ([empId, leads]) => ({
+              empId,
+              count: leads.length,
+            })
+          );
 
           const empCounts = remainingEmployees.map((emp) => {
-            const entry = empAssignments.find((e) => e.empId === emp._id.toString());
+            const entry = empAssignments.find(
+              (e) => e.empId === emp._id.toString()
+            );
             return { emp, count: entry ? entry.count : 0 };
           });
 
-          const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
+          const leastAssignedEmp = empCounts.sort(
+            (a, b) => a.count - b.count
+          )[0].emp;
           const empId = leastAssignedEmp._id.toString();
           if (!employeeMap.has(empId)) employeeMap.set(empId, []);
           employeeMap.get(empId).push(lead);
@@ -398,17 +405,22 @@ export const deleteEmp = async (req, res) => {
 
       // Step 3: Distribute remaining leads round-robin
       for (const lead of remainingLeads2) {
-        const empAssignments = Array.from(employeeMap.entries()).map(([empId, leads]) => ({
-          empId,
-          count: leads.length,
-        }));
+        const empAssignments = Array.from(employeeMap.entries()).map(
+          ([empId, leads]) => ({
+            empId,
+            count: leads.length,
+          })
+        );
 
         const empCounts = remainingEmployees.map((emp) => {
-          const entry = empAssignments.find((e) => e.empId === emp._id.toString());
+          const entry = empAssignments.find(
+            (e) => e.empId === emp._id.toString()
+          );
           return { emp, count: entry ? entry.count : 0 };
         });
 
-        const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
+        const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0]
+          .emp;
         const empId = leastAssignedEmp._id.toString();
         if (!employeeMap.has(empId)) employeeMap.set(empId, []);
         employeeMap.get(empId).push(lead);
@@ -419,7 +431,10 @@ export const deleteEmp = async (req, res) => {
         const leadIds = leads.map((l) => l._id);
 
         // Update AssignedTo in leads
-        await Lead.updateMany({ _id: { $in: leadIds } }, { $set: { AssignedTo: empId } });
+        await Lead.updateMany(
+          { _id: { $in: leadIds } },
+          { $set: { AssignedTo: empId } }
+        );
 
         // Update assignedChats and recentActivities of employee
         await Employee.findByIdAndUpdate(empId, {
@@ -456,7 +471,6 @@ export const deleteEmp = async (req, res) => {
     res.status(500).json({ message: "Server error during employee deletion" });
   }
 };
-
 
 export const logout = async (req, res) => {
   console.log("Triggered logout");

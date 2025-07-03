@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
 import { MdDriveFolderUpload } from "react-icons/md";
-import styles from '../styles/FileUploader.module.css'
+import styles from "../styles/FileUploader.module.css";
 
 const FileUploader = () => {
   const [progress, setProgress] = useState(0);
@@ -26,14 +26,18 @@ const FileUploader = () => {
 
     try {
       // Uploading CSV to temp
-      const res = await axios.post("http://localhost:5000/upload-temp", formData, {
-        onUploadProgress: (progressEvent) => {
-          const percent = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          setProgress(percent);
-        },
-      });
+      const res = await axios.post(
+        "http://localhost:5000/upload-temp",
+        formData,
+        {
+          onUploadProgress: (progressEvent) => {
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setProgress(percent);
+          },
+        }
+      );
 
       setIsVerifying(true); // Show verifying after upload
       setUploadedFileName(file.name);
@@ -87,7 +91,7 @@ const FileUploader = () => {
   };
 
   return (
-    <div style={{ textAlign: "center", height:'100%', width:"100%" }}>
+    <div style={{ textAlign: "center", height: "100%", width: "100%" }}>
       <input
         type="file"
         ref={fileRef}
@@ -111,7 +115,14 @@ const FileUploader = () => {
 
       {/* Uploading Progress */}
       {progress > 0 && progress < 100 && (
-        <div style={{ margin: "20px auto", width: "100px", height: "100px", position: "relative" }}>
+        <div
+          style={{
+            margin: "20px auto",
+            width: "100px",
+            height: "100px",
+            position: "relative",
+          }}
+        >
           <svg width="100" height="100">
             <circle
               cx="50"
@@ -151,15 +162,18 @@ const FileUploader = () => {
       {/* Verifying... Loader */}
       {progress === 100 && isVerifying && (
         <div style={{ marginTop: "20px" }}>
-          <div className="loader" style={{
-            border: "6px solid #f3f3f3",
-            borderTop: "6px solid #1976d2",
-            borderRadius: "50%",
-            width: "40px",
-            height: "40px",
-            animation: "spin 1s linear infinite",
-            margin: "auto"
-          }} />
+          <div
+            className="loader"
+            style={{
+              border: "6px solid #f3f3f3",
+              borderTop: "6px solid #1976d2",
+              borderRadius: "50%",
+              width: "40px",
+              height: "40px",
+              animation: "spin 1s linear infinite",
+              margin: "auto",
+            }}
+          />
           <p>Verifying leads...</p>
         </div>
       )}
@@ -167,7 +181,10 @@ const FileUploader = () => {
       {/* Final Step: Cancel or Proceed */}
       {verified && (
         <div style={{ marginTop: "20px" }}>
-          <button onClick={handleSaveToDb} style={{ padding: "10px 20px", marginRight: "10px" }}>
+          <button
+            onClick={handleSaveToDb}
+            style={{ padding: "10px 20px", marginRight: "10px" }}
+          >
             ✅ Proceed
           </button>
           <button onClick={handleCancelUpload} style={{ padding: "10px 20px" }}>

@@ -7,9 +7,9 @@ import { IoSearchSharp } from "react-icons/io5";
 function SearchComponent() {
   const [showFilter, setShowFilter] = useState(false);
   const [Filter, setFilter] = useState("All");
-  const handleSave=()=>{
-    setShowFilter(false)
-  }
+  const handleSave = () => {
+    setShowFilter(false);
+  };
   return (
     <div className={style.main}>
       <IoSearchSharp className={style.icon} size={28} />
@@ -34,7 +34,9 @@ function SearchComponent() {
           </select>
           <br />
           <br />
-          <button className={style.saveButton} onClick={handleSave}>Save</button>
+          <button className={style.saveButton} onClick={handleSave}>
+            Save
+          </button>
         </div>
       )}
     </div>

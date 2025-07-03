@@ -1,69 +1,68 @@
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-.main{
-    position:absolute;
-    width: 97.6%;
-    height: 100%;
-    background-color: rgba(195, 195, 195, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    top: 0;
+.main {
+  position: absolute;
+  width: 97.6%;
+  height: 100%;
+  background-color: rgba(195, 195, 195, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0;
 }
-.innerMain{
-    height: 45%;
-    width: 40%;
-    background-color: white;
-    border-radius: 10px;
-    padding:1% 2%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 3%;
+.innerMain {
+  height: 45%;
+  width: 40%;
+  background-color: white;
+  border-radius: 10px;
+  padding: 1% 2%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3%;
 }
-.header{
-    width: 100%;
-    height: 15%;
-    /* border: 1px solid black; */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.header {
+  width: 100%;
+  height: 15%;
+  /* border: 1px solid black; */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.close{
-    background: none;
-    font-size: large;
-    cursor: pointer;
-
+.close {
+  background: none;
+  font-size: large;
+  cursor: pointer;
 }
-.body{
-    height: 70%;
-    width: 100%;
-    border: 2px dashed #999;
-    border-radius: 10px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 4%;
+.body {
+  height: 70%;
+  width: 100%;
+  border: 2px dashed #999;
+  border-radius: 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4%;
 }
-.drag{
-    border: none;
-    background: none;
-    width: 100%;
-    /* border: 1px solid black; */
-    padding: 2rem 0;
+.drag {
+  border: none;
+  background: none;
+  width: 100%;
+  /* border: 1px solid black; */
+  padding: 2rem 0;
 }
-.btn{
-    background: none;
-    border: 1px solid black;
-    border-radius: 5px;
-    padding: 0.3rem;
-    cursor: pointer;
+.btn {
+  background: none;
+  border: 1px solid black;
+  border-radius: 5px;
+  padding: 0.3rem;
+  cursor: pointer;
 }
 /* style={{ textAlign: "center", height: "100%", width: "100%" }}   style={{
               border: "2px dashed #999",
@@ -71,29 +70,28 @@
               marginBottom: "20px",
               cursor: "pointer",
             }}*/
-.buttons{
-    height: 15%;
-    width: 100%;
-    display: flex;
-    flex-direction: row-reverse;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 5%;
-
+.buttons {
+  height: 15%;
+  width: 100%;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5%;
 }
-.buttons>button{
-    padding: 0.8rem;
-    width: 15%;
-    font-size: medium;
-    cursor: pointer;
-    border-radius: 10px;
+.buttons > button {
+  padding: 0.8rem;
+  width: 15%;
+  font-size: medium;
+  cursor: pointer;
+  border-radius: 10px;
 }
-.cancel{
-    color: grey;
-    border: 1px solid grey;
+.cancel {
+  color: grey;
+  border: 1px solid grey;
 }
-.save{
-    background-color: black;
-    color: white;
-    border: none;
+.save {
+  background-color: black;
+  color: white;
+  border: none;
 }

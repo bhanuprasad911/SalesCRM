@@ -86,15 +86,15 @@ export const updateAdminPassword = async (data) => {
   const response = await axiosInstance.patch("/admin/updatePassword", data);
   return response;
 };
-export const getActivity = async()=>{
+export const getActivity = async () => {
   const response = await axiosInstance.get("/admin");
   return response;
-}
-export const getLeadFiles = async()=>{
+};
+export const getLeadFiles = async () => {
   const response = await axiosInstance.get("/lead/all");
   return response;
-}
-export const getRecentClosedLeads = async()=>{
+};
+export const getRecentClosedLeads = async () => {
   const response = await axiosInstance.get("/lead/getClosedInLast10Days");
   return response;
-}
+};

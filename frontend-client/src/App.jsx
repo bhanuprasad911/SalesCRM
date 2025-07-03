@@ -32,7 +32,7 @@ const Layout = ({ children }) => {
 };
 
 const LayoutWrapper = () => {
-  const { logoutUser, } = useAuth(); // ✅ get logout function from context
+  const { logoutUser} = useAuth(); // ✅ get logout function from context
   useExecuteLogoutOnUserLeave(logoutUser); // ✅ use the hook
   // console.log(user)
 
@@ -80,7 +80,7 @@ const LayoutWrapper = () => {
 
 const App = () => {
   return (
-    <Router basename="/ex">
+    <Router basename="/employee">
       <AuthProvider>
         <LayoutWrapper />
       </AuthProvider>

@@ -1,13 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { login } from "../services/api.js"; 
+import { login } from "../services/api.js";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext.jsx";
-import style from '../styles/LoginPage.module.css'
-
+import style from "../styles/LoginPage.module.css";
 
 const LoginPage = () => {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -18,17 +17,17 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true)
+    setLoading(true);
     try {
       const res = await login(form);
       toast.success("Login successful!");
       sessionStorage.setItem("logged", "true");
-      setUser(res.data.data)
+      setUser(res.data.data);
       navigate("/home");
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
     }
-    setLoading(false)
+    setLoading(false);
   };
 
   return (
@@ -40,7 +39,7 @@ const LoginPage = () => {
         type="password"
         onChange={handleChange}
       />
-      <button onClick={handleSubmit}>{loading?"..." : "Login"}</button>
+      <button onClick={handleSubmit}>{loading ? "..." : "Login"}</button>
     </div>
   );
 };

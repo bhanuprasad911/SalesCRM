@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import style from '../styles/Leads.module.css';
-import SearchComponent from '../components/SearchComponent.jsx';
-import UploadLeadsComponent from '../components/UploadLeadsComponent.jsx';
-import { getLeads } from '../services/api.js';
-import { useSearchParams } from 'react-router';
+import React, { useState, useEffect } from "react";
+import style from "../styles/Leads.module.css";
+import SearchComponent from "../components/SearchComponent.jsx";
+import UploadLeadsComponent from "../components/UploadLeadsComponent.jsx";
+import { getLeads } from "../services/api.js";
+import { useSearchParams } from "react-router";
 
 function Leads({ select }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const pageFromUrl = parseInt(searchParams.get('page')) || 1;
+  const pageFromUrl = parseInt(searchParams.get("page")) || 1;
 
   const [showForm, setShowForm] = useState(false);
   const [leads, setLeads] = useState([]);
   const [page, setPage] = useState(pageFromUrl);
   const [totalPages, setTotalPages] = useState(1);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
 
   function formatDateToDDMMYYYY(dateString) {
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   }
@@ -29,7 +29,7 @@ function Leads({ select }) {
       setLeads(response.data.data);
       setTotalPages(response.data.totalPages);
     } catch (error) {
-      console.error('Error fetching leads:', error);
+      console.error("Error fetching leads:", error);
     }
   };
 
@@ -56,7 +56,10 @@ function Leads({ select }) {
       <div className={style.InnerMain}>
         <div className={style.header}>
           {` Home > ${select}`}
-          <button className={style.addLeads} onClick={() => setShowForm(!showForm)}>
+          <button
+            className={style.addLeads}
+            onClick={() => setShowForm(!showForm)}
+          >
             Add leads
           </button>
           {showForm && (
@@ -86,7 +89,9 @@ function Leads({ select }) {
                 <div className={style.tableRow} key={lead._id}>
                   <p className={style.id}>{index + 1}</p>
                   <p className={style.name}>{lead.name}</p>
-                  <p className={style.email}>{formatDateToDDMMYYYY(lead.createdAt)}</p>
+                  <p className={style.email}>
+                    {formatDateToDDMMYYYY(lead.createdAt)}
+                  </p>
                   <p className={style.loc}>{lead.total}</p>
                   <p className={style.lan}>{lead.assigned}</p>
                   <p className={style.lan1}>{lead.unAssigned}</p>
@@ -102,7 +107,9 @@ function Leads({ select }) {
                 <button
                   key={index}
                   onClick={() => setPage(index + 1)}
-                  className={`${style.pageButton} ${page === index + 1 ? style.activePage : ''}`}
+                  className={`${style.pageButton} ${
+                    page === index + 1 ? style.activePage : ""
+                  }`}
                 >
                   {index + 1}
                 </button>
