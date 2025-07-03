@@ -2,10 +2,9 @@ import React, { useEffect, useState } from "react";
 import style from "../styles/HomePage.module.css";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
-import { logout, updateCheck } from "../services/api.js";
 
 function HomePage() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, logoutUser } = useAuth(); // ⬅ use logoutUser from context
   const [checkedIn, setCheckedIn] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [checkInDetails, setCheckedInDetails] = useState({
@@ -13,7 +12,6 @@ function HomePage() {
     checkedOutTime: "--:--",
   });
   const [currentShift, setCurrentShift] = useState(null);
-  console.log(user);
 
   const getCurrentTime = () => {
     return new Date().toLocaleTimeString("en-US", {
@@ -22,19 +20,10 @@ function HomePage() {
       hour12: true,
     });
   };
-  const allBreaks = user.history
-    ?.flatMap((entry) =>
-      entry.breaks.map((brk) => ({
-        ...brk,
-        date: entry.date,
-        fullDateTime: new Date(`${entry.date} ${brk.breakStartTime}`),
-      }))
-    )
-    .sort((a, b) => b.fullDateTime - a.fullDateTime) // Sort by latest first
-    .slice(0, 10);
+
   useEffect(() => {
     const today = getFormattedDate();
-    const currentShift = user.history.find((hist) => hist.date === today);
+    const currentShift = user?.history?.find((hist) => hist.date === today);
     if (currentShift) {
       setCheckedInDetails({
         checkedInTime: currentShift.checkedInTime || "--:--",
@@ -47,38 +36,20 @@ function HomePage() {
 
   function getFormattedDate() {
     const today = new Date();
-
-    const day = String(today.getDate()).padStart(2, "0"); // 01 to 31
-    const month = String(today.getMonth() + 1).padStart(2, "0"); // 01 to 12
-    const year = today.getFullYear(); // 2025
-
-    return `${day}-${month}-${year}`;
+    return `${String(today.getDate()).padStart(2, "0")}-${String(today.getMonth() + 1).padStart(2, "0")}-${today.getFullYear()}`;
   }
 
+  const allBreaks = user?.history
+    ?.flatMap((entry) =>
+      entry.breaks.map((brk) => ({
+        ...brk,
+        date: entry.date,
+        fullDateTime: new Date(`${entry.date} ${brk.breakStartTime}`),
+      }))
+    )
+    .sort((a, b) => b.fullDateTime - a.fullDateTime)
+    .slice(0, 10);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setUser(null);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  function getTimeDifferenceFromNow(pastTimestamp) {
-    const past = new Date(pastTimestamp);
-    const now = new Date();
-    const diffMs = now - past;
-
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMinutes / 60);
-
-    if (diffMinutes < 60) {
-      return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`;
-    } else {
-      return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
-    }
-  }
   user?.recentActivities.sort((a, b) => {
     return new Date(b.timestamp) - new Date(a.timestamp);
   });
@@ -109,7 +80,7 @@ function HomePage() {
             className={`${style.button} ${
               user.status === "Active" ? style.checkedIn : ""
             }`}
-            onClick={handleLogout}
+            onClick={logoutUser} // ⬅ updated to call from context
           ></button>
         </div>
       </div>
@@ -150,7 +121,7 @@ function HomePage() {
           <ul>
             {user?.recentActivities.map((activity, index) => {
               const hoursAgo = activity.timestamp
-                ? `${getTimeDifferenceFromNow(activity.timestamp)}`
+                ? getTimeDifferenceFromNow(activity.timestamp)
                 : "some time ago";
 
               return (
@@ -164,6 +135,20 @@ function HomePage() {
       </div>
     </div>
   );
+}
+
+function getTimeDifferenceFromNow(pastTimestamp) {
+  const past = new Date(pastTimestamp);
+  const now = new Date();
+  const diffMs = now - past;
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`;
+  } else {
+    return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+  }
 }
 
 export default HomePage;

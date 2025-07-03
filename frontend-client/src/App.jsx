@@ -1,4 +1,3 @@
-// App.js
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
@@ -12,11 +11,10 @@ import SchedulePage from './pages/SchedulePage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import style from './styles/App.module.css';
 import { Toaster } from 'react-hot-toast';
-import useLogoutOnTabCLose from './hooks/useLogoutOnTabCLose.js';
-import useTabCloseLogout from './hooks/useTabCloseLogout.js';
-import setupLogoutOnTabClose from './services/utils.js';
 import { useEffect } from 'react';
 
+import useExecuteLogoutOnUserLeave from './hooks/useExecuteLogoutOnLeave.js';
+import { useAuth } from './context/AuthContext';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -34,8 +32,9 @@ const Layout = ({ children }) => {
 };
 
 const LayoutWrapper = () => {
-  // useLogoutOnTabCLose()
-  
+  const { logoutUser } = useAuth(); // ✅ get logout function from context
+  useExecuteLogoutOnUserLeave(logoutUser); // ✅ use the hook
+
   return (
     <Layout>
       <Routes>
@@ -78,11 +77,7 @@ const LayoutWrapper = () => {
   );
 };
 
-
 const App = () => {
-      // useTabCloseLogout()
-
-
   return (
     <Router basename="/ex">
       <AuthProvider>
