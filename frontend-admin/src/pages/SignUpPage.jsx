@@ -60,26 +60,30 @@ function SignUpPage() {
     }
   };
 
-  const handleLogin = async () => {
-    try {
-      const { email, password } = loginData;
-      if (!email.trim() || !password.trim()) {
-        toast.error("Please fill all the fields");
-        return;
-      }
-
-      await adminLogin(loginData); // log in and set cookie
-      const res = await getAdminDetails(); 
-      // fetch admin details
-      console.log(res.data.admin)
-      setAdmin(res.data.admin); // update context
-      toast.success('Login successful');
-      navigate('/dashboard'); // redirect
-    } catch (error) {
-      console.log('Login error:', error);
-      toast.error('Login failed');
+ const handleLogin = async () => {
+  try {
+    const { email, password } = loginData;
+    if (!email.trim() || !password.trim()) {
+      toast.error("Please fill all the fields");
+      return;
     }
-  };
+
+    const loginRes = await adminLogin(loginData); // POST /admin/login
+    const { token } = loginRes.data;
+    sessionStorage.setItem("admintoken", token); // Save token
+
+    const res = await getAdminDetails(); // GET /admin/me with auth header
+    console.log(res.data.admin);
+    setAdmin(res.data.admin);
+
+    toast.success("Login successful");
+    navigate("/dashboard");
+  } catch (error) {
+    console.log("Login error:", error);
+    toast.error("Login failed");
+  }
+};
+
 
   useEffect(() => {
     setLoginData({ email: '', password: '' });

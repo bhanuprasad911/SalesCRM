@@ -32,28 +32,29 @@ export const login = async (req, res) => {
     if (!admin) {
       return res
         .status(400)
-        .json({ message: "Admin with the given mail does not exist" });
+        .json({ message: "Admin with the given email does not exist" });
     }
+
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
     }
+
     const token = jwt.sign({ id: admin._id }, process.env.SECRET, {
       expiresIn: "1h",
     });
-    res.cookie("admintoken", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // set true in production
-      sameSite: "strict",
-      maxAge: 60 * 60 * 1000, // 1 hour
-    });
 
-    res.status(200).json({ message: "Login Succcessfull" });
+    // Send token in response instead of cookie
+    res.status(200).json({
+      message: "Login successful",
+      token, // Include token here
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 export const adminMe = async (req, res) => {
   const id = req.user.id;
