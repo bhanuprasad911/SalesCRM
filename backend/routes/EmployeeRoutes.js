@@ -18,7 +18,7 @@ const empRouter = express.Router();
 
 empRouter.post("/signup", signup);
 empRouter.post("/login", login);
-empRouter.post("/logout", logout);
+empRouter.post("/logout",authMiddleware, logout);
 
 
 empRouter.get("/me", authMiddleware, getMe);

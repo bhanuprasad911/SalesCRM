@@ -14,6 +14,9 @@ import style from './styles/App.module.css';
 import { Toaster } from 'react-hot-toast';
 import useLogoutOnTabCLose from './hooks/useLogoutOnTabCLose.js';
 import useTabCloseLogout from './hooks/useTabCloseLogout.js';
+import setupLogoutOnTabClose from './services/utils.js';
+import { useEffect } from 'react';
+
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -78,6 +81,9 @@ const LayoutWrapper = () => {
 
 
 const App = () => {
+  useEffect(() => {
+     setupLogoutOnTabClose("http://localhost:5003/api/employee/logout");
+  }, []);
   return (
     <Router basename="/ex">
       <AuthProvider>

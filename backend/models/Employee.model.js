@@ -3,8 +3,9 @@ import bcrypt from "bcryptjs";
 
 const BreakSchema = new mongoose.Schema(
   {
-    breakStartTime: String,
-    breakEndTime: String,
+    date: String, // e.g., "02-07-2025"
+    breakStartTime: String, // e.g., "7:00 PM"
+    breakEndTime: String, // e.g., "11:59 PM"
   },
   { _id: false }
 );
@@ -57,6 +58,10 @@ const EmployeeSchema = new mongoose.Schema(
     recentActivities: {
       type: [ActivitySchema],
       default: [],
+    },
+    refreshToken: {
+      type: String,
+      default: null,
     },
   },
   { timestamps: true }

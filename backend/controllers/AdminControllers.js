@@ -41,7 +41,7 @@ export const login = async (req, res) => {
     const token = jwt.sign({ id: admin._id }, process.env.SECRET, {
       expiresIn: "1h",
     });
-    res.cookie("token", token, {
+    res.cookie("admintoken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // set true in production
       sameSite: "strict",

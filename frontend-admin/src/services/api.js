@@ -90,3 +90,7 @@ export const getActivity = async()=>{
   const response = await axiosInstance.get("/admin");
   return response;
 }
+export const getLeadFiles = async()=>{
+  const response = await axiosInstance.get("/lead/all");
+  return response;
+}

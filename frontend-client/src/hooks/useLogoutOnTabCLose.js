@@ -2,26 +2,19 @@ import { useEffect } from "react";
 
 const useLogoutOnTabClose = () => {
   useEffect(() => {
-    const LOGOUT_URL = `${import.meta.env.VITE_BACKEND_URL}/employee/logout`;
+    const logoutOnClose = (e) => {
+      const navEntries = performance.getEntriesByType("navigation");
+      const type = navEntries.length ? navEntries[0].type : performance.navigation.type;
 
-    const handleUnload = (event) => {
-      // Use `visibilitychange` to check if tab is going away
-      document.addEventListener("visibilitychange", () => {
-        const navEntries = performance.getEntriesByType("navigation");
-        const navType = navEntries[0]?.type;
+      // 1 = reload, "reload" also for newer browsers
+      if (type === "reload" || type === 1) return;
 
-        if (document.visibilityState === "hidden" && navType !== "reload") {
-          console.log("🚪 Logging out (tab close)");
-          navigator.sendBeacon(LOGOUT_URL);
-        }
-      });
+      // Else, it's a tab close → send logout
+      navigator.sendBeacon("http://localhost:5003/api/employee/logout");
     };
 
-    window.addEventListener("unload", handleUnload);
-
-    return () => {
-      window.removeEventListener("unload", handleUnload);
-    };
+    window.addEventListener("unload", logoutOnClose);
+    return () => window.removeEventListener("unload", logoutOnClose);
   }, []);
 };
 

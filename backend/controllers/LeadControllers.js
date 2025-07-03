@@ -11,10 +11,8 @@ import multer from "multer";
 import csvParser from "csv-parser";
 
 
-
 export const saveToDb = async (req, res) => {
   const { tempId, fileName } = req.body;
-  console.log(fileName);
 
   if (!tempId) {
     return res.status(400).json({ message: "Temp ID is required" });
@@ -25,12 +23,9 @@ export const saveToDb = async (req, res) => {
     return res.status(404).json({ message: "File not found" });
   }
 
-  // Check for duplicate file name
   const existingFile = await LeadFile.findOne({ name: fileName });
   if (existingFile) {
-    return res
-      .status(409)
-      .json({ message: "File with this name already exists" });
+    return res.status(409).json({ message: "File with this name already exists" });
   }
 
   const rawLeads = [];
@@ -40,100 +35,98 @@ export const saveToDb = async (req, res) => {
       .pipe(csvParser())
       .on("data", (row) => rawLeads.push(row))
       .on("end", async () => {
-        const requiredFields = [
-          "name",
-          "email",
-          "phone",
-          "location",
-          "language",
-          "source",
-          "NextAvailable",
-        ];
-
-        const invalid = rawLeads.find((lead) =>
-          requiredFields.some((f) => !lead[f])
-        );
+        const requiredFields = ["name", "email", "phone", "location", "language", "source", "NextAvailable"];
+        const invalid = rawLeads.find((lead) => requiredFields.some((f) => !lead[f]));
         if (invalid) {
-          return res
-            .status(400)
-            .json({ message: "Missing fields in CSV data" });
+          return res.status(400).json({ message: "Missing fields in CSV data" });
         }
 
         const employees = await Employee.find();
         const employeeMap = new Map(); // empId => lead[]
-        const leadsStep1 = [];
-        const leadsUnassigned = [];
+        const assignedLeads = [];
+        const remainingLeads = [];
 
-        // Step 1: Assign leads based on both language and location
+        // Case 1: No employees
+        if (employees.length === 0) {
+          const unassignedLeads = rawLeads.map((lead) => ({ ...lead, AssignedTo: null, fileName }));
+          await Lead.insertMany(unassignedLeads);
+          await LeadFile.create({
+            name: fileName,
+            total: unassignedLeads.length,
+            assigned: 0,
+            unAssigned: unassignedLeads.length,
+            closed: 0,
+          });
+          fs.unlinkSync(filePath);
+          return res.status(200).json({ message: "No employees found. All leads saved as unassigned." });
+        }
+
+        // Step 1: Match by language + location
         for (const lead of rawLeads) {
-          const match = employees.find(
-            (emp) =>
-              emp.language === lead.language && emp.location === lead.location
-          );
-
+          const match = employees.find(emp => emp.language === lead.language && emp.location === lead.location);
           if (match) {
             const empId = match._id.toString();
             if (!employeeMap.has(empId)) employeeMap.set(empId, []);
-            const leadDoc = { ...lead, AssignedTo: match._id, fileName };
-            employeeMap.get(empId).push(leadDoc);
-            leadsStep1.push(leadDoc);
+            const doc = { ...lead, AssignedTo: match._id, fileName };
+            employeeMap.get(empId).push(doc);
+            assignedLeads.push(doc);
           } else {
-            leadsUnassigned.push(lead);
+            remainingLeads.push(lead);
           }
         }
 
-        // Step 2: Assign remaining leads based on language OR location
-        const assignedEmpIds = new Set([...employeeMap.keys()]);
-        const employeesWithNoStep1Assignments = employees.filter(
-          (emp) => !assignedEmpIds.has(emp._id.toString())
-        );
-
-        const eligibleEmpLeadsMap = new Map(); // empId => []
-        for (const emp of employeesWithNoStep1Assignments) {
-          eligibleEmpLeadsMap.set(emp._id.toString(), []);
-        }
-
-        for (const lead of leadsUnassigned) {
-          const matchingEmps = employeesWithNoStep1Assignments.filter(
-            (emp) =>
-              emp.language === lead.language || emp.location === lead.location
+        // Step 2: Match by language OR location
+        const stillRemainingLeads = [];
+        for (const lead of remainingLeads) {
+          const matchingEmps = employees.filter(emp =>
+            emp.language === lead.language || emp.location === lead.location
           );
-
           if (matchingEmps.length > 0) {
-            const leastAssignedEmp = [...matchingEmps].sort(
-              (a, b) =>
-                (eligibleEmpLeadsMap.get(a._id.toString())?.length ?? 0) -
-                (eligibleEmpLeadsMap.get(b._id.toString())?.length ?? 0)
-            )[0];
+            const empAssignments = Array.from(employeeMap.entries()).map(([id, leads]) => ({
+              empId: id,
+              count: leads.length,
+            }));
 
+            const empCounts = employees.map((emp) => {
+              const entry = empAssignments.find((e) => e.empId === emp._id.toString());
+              return { emp, count: entry ? entry.count : 0 };
+            });
+
+            const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
             const empId = leastAssignedEmp._id.toString();
-            const leadDoc = { ...lead, AssignedTo: leastAssignedEmp._id, fileName };
-            eligibleEmpLeadsMap.get(empId).push(leadDoc);
+            if (!employeeMap.has(empId)) employeeMap.set(empId, []);
+            const doc = { ...lead, AssignedTo: leastAssignedEmp._id, fileName };
+            employeeMap.get(empId).push(doc);
+            assignedLeads.push(doc);
+          } else {
+            stillRemainingLeads.push(lead);
           }
         }
 
-        // Merge step 2 into main employeeMap
-        for (const [empId, leads] of eligibleEmpLeadsMap.entries()) {
+        // Step 3: Distribute leftover leads round-robin based on least assignments
+        for (const lead of stillRemainingLeads) {
+          const empAssignments = Array.from(employeeMap.entries()).map(([id, leads]) => ({
+            empId: id,
+            count: leads.length,
+          }));
+
+          const empCounts = employees.map((emp) => {
+            const entry = empAssignments.find((e) => e.empId === emp._id.toString());
+            return { emp, count: entry ? entry.count : 0 };
+          });
+
+          const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
+          const empId = leastAssignedEmp._id.toString();
           if (!employeeMap.has(empId)) employeeMap.set(empId, []);
-          employeeMap.get(empId).push(...leads);
+          const doc = { ...lead, AssignedTo: leastAssignedEmp._id, fileName };
+          employeeMap.get(empId).push(doc);
+          assignedLeads.push(doc);
         }
-
-        const finalLeads = [...leadsStep1];
-        for (const leads of eligibleEmpLeadsMap.values()) {
-          finalLeads.push(...leads);
-        }
-
-        // Handle completely unassigned
-        const totalAssignedEmails = new Set(finalLeads.map((l) => l.email));
-        const completelyUnassigned = rawLeads
-          .filter((l) => !totalAssignedEmails.has(l.email))
-          .map((l) => ({ ...l, AssignedTo: null, fileName }));
-        finalLeads.push(...completelyUnassigned);
 
         // Insert all leads
-        const insertedLeads = await Lead.insertMany(finalLeads);
+        const insertedLeads = await Lead.insertMany(assignedLeads);
 
-        // Assign leads to employees, update assignedChats, add recent activity and admin log
+        // Update employees
         for (const [empId, leads] of employeeMap.entries()) {
           const leadIds = leads
             .map((l) => insertedLeads.find((ins) => ins.email === l.email)?._id)
@@ -163,7 +156,7 @@ export const saveToDb = async (req, res) => {
           }
         }
 
-        // Create LeadFile record
+        // Create LeadFile summary
         await LeadFile.create({
           name: fileName,
           total: insertedLeads.length,
@@ -173,10 +166,7 @@ export const saveToDb = async (req, res) => {
         });
 
         fs.unlinkSync(filePath);
-
-        return res.status(200).json({
-          message: `${insertedLeads.length} leads saved successfully.`,
-        });
+        return res.status(200).json({ message: `${insertedLeads.length} leads saved successfully.` });
       });
   } catch (error) {
     console.error("saveToDb Error:", error);
@@ -246,6 +236,16 @@ export const cancelUploadTempFile = async (req, res) => {
     return res.status(500).json({ message: "Server error during file cancel" });
   }
 };
+export const getAllLeadFiles = async (req, res) =>{
+  try {
+    const result = await LeadFile.find()
+    res.status(200).json(result)
+    
+  }catch(error){
+    console.log(error)
+    return res.status(500).json({ message: "Server error while getting all lead files" });
+  }
+}
 export const getLeadFiles = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;

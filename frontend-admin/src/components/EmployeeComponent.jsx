@@ -5,8 +5,11 @@ import { useState } from "react";
 import { MdOutlineEdit, MdDelete } from "react-icons/md";
 import {deleteEmployee} from '../services/api.js'
 import {toast} from 'react-hot-toast'
+import {useLocation} from 'react-router-dom'
 
 function EmployeeComponent(props) {
+  const location = useLocation()
+  const path = location.pathname
     const [showEdit, setShowEdit] = useState(false)
     const deleteEmp = async ()=>{
       try {
@@ -31,7 +34,7 @@ function EmployeeComponent(props) {
     const closedChats = props.employee.closedChats.length
     
   return (
-    <div className={style.main}>
+    <div className={`${style.main} ${path==="/dashboard"?style.abc:""}`}>
       <div className={style.profile}>
         {props.employee.firstName[0].toUpperCase()+props.employee.lastName[0].toUpperCase()}
       </div>
@@ -50,9 +53,15 @@ function EmployeeComponent(props) {
         </p>
 
       </div>
-      <button className={style.options} onClick={()=>setShowEdit(!showEdit)}>
+      {
+        path==="/employees"&&(
+            <button className={style.options} onClick={()=>setShowEdit(!showEdit)}>
         <SlOptionsVertical color="black" size={20} />
       </button>
+
+        )
+      }
+    
       {
         showEdit&&<div className={style.edit}>
             <button className={style.button} onClick={()=>{setShowEdit(false);props.setEdit(props.employee._id)}}>

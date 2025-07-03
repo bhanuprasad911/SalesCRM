@@ -1,6 +1,7 @@
 import express from "express";
 import {
   cancelUploadTempFile,
+  getAllLeadFiles,
   getLeadFiles,
   saveToDb,
   updateLeadStatus,
@@ -15,6 +16,7 @@ LeadRouter.post("/upload-temp", upload.single("file"), uploadTempFile);
 LeadRouter.post("/cancel-upload", cancelUploadTempFile);
 LeadRouter.post("/save-to-db", saveToDb);
 LeadRouter.get("/", getLeadFiles);
+LeadRouter.get('/all',getAllLeadFiles)
 LeadRouter.patch("/updateAvailable", updateNextAvavilable);
 LeadRouter.patch("/updateStatus", updateLeadStatus);
 LeadRouter.patch("/updateType", updateLeadType);
