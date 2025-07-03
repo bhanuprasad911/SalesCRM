@@ -363,3 +363,59 @@ export const updateLeadStatus = async (req, res) => {
   }
 };
 
+
+
+export const getClosedChatsLast10Days = async (req, res) => {
+  try {
+    const today = new Date();
+    const startDate = new Date();
+    startDate.setDate(today.getDate() - 9); // last 10 days including today
+
+    const closedLeads = await Lead.aggregate([
+      {
+        $match: {
+          status: "Closed",
+          closedAt: { $gte: startDate, $lte: today },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$closedAt" },
+          },
+          closedCount: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    // Convert to map for easy lookup
+    const closedMap = new Map();
+    closedLeads.forEach((entry) => {
+      closedMap.set(entry._id, entry.closedCount);
+    });
+
+    const result = [];
+    for (let i = 9; i >= 0; i--) {
+      const dateObj = new Date();
+      dateObj.setDate(today.getDate() - i);
+
+      const dateStr = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
+      const dayStr = dateObj.toLocaleDateString("en-US", { weekday: "short" }); // Mon, Tue, etc.
+
+      result.push({
+        date: dateStr,
+        day: dayStr,
+        closedCount: closedMap.get(dateStr) || 0,
+      });
+    }
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in getRecentClosedLeads:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+

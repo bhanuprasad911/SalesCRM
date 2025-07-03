@@ -26,12 +26,16 @@ const LeadSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['Hot', 'Warm', 'Cold'],
-    default: 'Warm' // Optional: fallback value
+    default: 'Warm'
   },
   status: {
     type: String,
     enum: ['Open', 'Closed'],
-    default:'Open'
+    default: 'Open'
+  },
+  closedAt: {
+    type: Date,
+    default: null
   },
   source: {
     type: String,
@@ -39,18 +43,26 @@ const LeadSchema = new mongoose.Schema({
   },
   NextAvailable: {
     type: Date,
-    default: Date.now 
+    default: Date.now
   },
   AssignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'employees',
     default: null
   },
-  fileName:{
-    type:String,
-    required:true
+  fileName: {
+    type: String,
+    required: true
   }
-}, {timestamps:true});
+}, { timestamps: true });
+
+// Automatically set closedAt when status changes to "Closed"
+LeadSchema.pre('save', function (next) {
+  if (this.isModified('status') && this.status === 'Closed') {
+    this.closedAt = new Date();
+  }
+  next();
+});
 
 const Lead = mongoose.model('Leads', LeadSchema);
 export default Lead;

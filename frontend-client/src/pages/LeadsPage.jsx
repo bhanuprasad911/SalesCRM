@@ -12,32 +12,24 @@ function LeadsPage() {
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
 
+  const fetchLeads = async () => {
+    const response = await getLeadsAssigned();
+    setLeads(response.data);
+    setFilteredLeads(response.data);
+  };
+
   useEffect(() => {
-    const fetchLeads = async () => {
-      const response = await getLeadsAssigned();
-      setLeads(response.data);
-      setFilteredLeads(response.data);
-    };
     fetchLeads();
   }, []);
 
   const handleSave = () => {
-    const now = new Date();
-    const startOfDay = new Date(now.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(now.setHours(23, 59, 59, 999));
-
     if (filter === "Open") {
-      const todayLeads = leads.filter((lead) => {
-        return lead.status === "Open";
-      });
-      setFilteredLeads(todayLeads);
-    }
-      else if(filter==="Closed"){
-        const closedLeads = leads.filter((lead) =>
-          lead.status === "Closed" )
-        setFilteredLeads(closedLeads);
-      }
-    else {
+      const openLeads = leads.filter((lead) => lead.status === "Open");
+      setFilteredLeads(openLeads);
+    } else if (filter === "Closed") {
+      const closedLeads = leads.filter((lead) => lead.status === "Closed");
+      setFilteredLeads(closedLeads);
+    } else {
       setFilteredLeads(leads);
     }
 
@@ -108,12 +100,13 @@ function LeadsPage() {
         {searchedLeads.length === 0 ? (
           <p>No leads found</p>
         ) : (
-          searchedLeads.map((lead, index) => (
+          searchedLeads.map((lead) => (
             <LeadsComponent
-              key={index}
+              key={lead._id}
               lead={lead}
               leads={leads}
               setLeads={setLeads}
+              refreshLeads={fetchLeads}
             />
           ))
         )}

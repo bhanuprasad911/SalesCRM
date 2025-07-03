@@ -10,7 +10,7 @@ function Employees({ select }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageFromUrl = parseInt(searchParams.get("page")) || 1;
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(""); // ✅
   const [showForm, setShowForm] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [sort, setSort] = useState({ field: "", direction: "asc" });
@@ -19,7 +19,6 @@ function Employees({ select }) {
   const [currentPage, setCurrentPage] = useState(pageFromUrl);
   const itemsPerPage = 10;
 
-  // Fetch employees on mount
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
@@ -33,17 +32,15 @@ function Employees({ select }) {
     fetchEmployees();
   }, []);
 
-  // Sync sort when employees change
   useEffect(() => {
     setSorted(employees);
   }, [employees]);
 
-  // Sync page to URL
   useEffect(() => {
     setSearchParams({ page: currentPage });
   }, [currentPage, setSearchParams]);
 
-  // Sorting logic
+  // ✅ Sorting
   useEffect(() => {
     let sortedData = [...employees];
 
@@ -64,19 +61,39 @@ function Employees({ select }) {
     setSorted(sortedData);
   }, [sort, employees]);
 
-  // Pagination calculations
+  // ✅ Filter sorted employees using search text
+// ✅ Filter sorted employees by selected fields only
+const filtered = sorted.filter((emp) => {
+  const lowerSearch = search.toLowerCase();
+  const fullname = `${emp.firstName} ${emp.lastName}`;
+
+  const fieldsToCheck = [
+    emp._id,
+    fullname,
+    emp.email,
+    emp.status,
+    emp.assignedChats?.length,
+    emp.closedChats?.length,
+  ];
+
+  return fieldsToCheck.some((field) =>
+    String(field).toLowerCase().includes(lowerSearch)
+  );
+});
+
+
+  // ✅ Pagination after filtering
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentEmployees = sorted.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(sorted.length / itemsPerPage);
+  const currentEmployees = filtered.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
 
-  // Auto-correct invalid current page
   useEffect(() => {
-    const total = Math.ceil(sorted.length / itemsPerPage);
+    const total = Math.ceil(filtered.length / itemsPerPage);
     if (currentPage > total) {
       setCurrentPage(Math.max(1, total));
     }
-  }, [sorted, currentPage]);
+  }, [filtered, currentPage]);
 
   const handleSort = (field) => {
     setSort((prev) => ({
@@ -105,7 +122,8 @@ function Employees({ select }) {
         />
       )}
 
-      <SearchComponent />
+      {/* ✅ Search with props */}
+      <SearchComponent text={search} setText={setSearch} />
 
       <div className={style.innermain}>
         <div className={style.title}>
@@ -135,19 +153,23 @@ function Employees({ select }) {
             <button className={`${style.button} ${style.options}`}>Options</button>
           </div>
 
-          {currentEmployees.map((emp) => (
-            <EmployeeComponent
-              key={emp._id}
-              employee={emp}
-              employees={sorted}
-              setEdit={setEdit}
-              setEmployee={setEmployees}
-              onDelete={handleDelete} // pass delete handler
-            />
-          ))}
+          {currentEmployees.length === 0 ? (
+            <p className={style.noResults}>No employees found</p>
+          ) : (
+            currentEmployees.map((emp) => (
+              <EmployeeComponent
+                key={emp._id}
+                employee={emp}
+                employees={sorted}
+                setEdit={setEdit}
+                setEmployee={setEmployees}
+                onDelete={handleDelete}
+              />
+            ))
+          )}
         </div>
 
-        {/* Pagination */}
+        {/* ✅ Pagination */}
         {totalPages > 1 && (
           <div className={style.pagination}>
             {Array.from({ length: totalPages }, (_, index) => (

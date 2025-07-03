@@ -11,7 +11,7 @@ import {
   leadTypeUpdate,
 } from "../services/api";
 
-function LeadsComponent({ lead, leads, setLeads }) {
+function LeadsComponent({ lead, leads, setLeads, refreshLeads }) {
   const [showtype, setShowType] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showDate, setShowDate] = useState(false);
@@ -21,30 +21,21 @@ function LeadsComponent({ lead, leads, setLeads }) {
     date: "",
   });
 
-function formatDateToLongUTC(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC"
-  });
-}
-  console.log(lead.createdAt)
-  console.log(formatDateToLongUTC(lead.createdAt))
+  function formatDateToLongUTC(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+  }
 
   function convertDateTimeToISO({ date, time }) {
     const localDateTimeString = `${date}T${time}:00`;
     const dateObj = new Date(localDateTimeString);
     return dateObj.toISOString();
   }
-
-  const updateLeadsLocally = (updatedLead) => {
-    const updatedLeads = leads.map((l) =>
-      l._id === updatedLead._id ? { ...l, ...updatedLead } : l
-    );
-    setLeads(updatedLeads);
-  };
 
   const updateType = async (newType) => {
     if (lead.type === newType) {
@@ -58,11 +49,10 @@ function formatDateToLongUTC(dateString) {
     }
 
     try {
-      const data = { id: lead._id, type: newType };
-      await leadTypeUpdate(data);
-      updateLeadsLocally({ ...lead, type: newType });
+      await leadTypeUpdate({ id: lead._id, type: newType });
       toast.success(`Lead type updated to ${newType}`);
       setShowType(false);
+      refreshLeads();
     } catch (err) {
       console.error(err);
       toast.error("Failed to update lead type");
@@ -84,11 +74,11 @@ function formatDateToLongUTC(dateString) {
       if (lead.status === "Closed") {
         toast.error("You can't schedule call for a closed lead");
         return;
-        }
+      }
       await leadAvailableUpdate(data);
-      updateLeadsLocally({ ...lead, NextAvailable: time });
       toast.success("Lead availability updated");
       setShowDate(false);
+      refreshLeads();
     } catch (error) {
       console.error(error);
       toast.error("Failed to update time");
@@ -114,18 +104,14 @@ function formatDateToLongUTC(dateString) {
 
       if (status === "Closed" && next > now) {
         toast.error("Scheduled lead cannot be closed");
+        setStatus("")
         return;
       }
 
-      const data = {
-        id: lead._id,
-        status,
-      };
-
-      await leadStatusUpdate(data);
-      updateLeadsLocally({ ...lead, status });
+      await leadStatusUpdate({ id: lead._id, status });
       toast.success("Lead status updated");
       setStatus("");
+      refreshLeads();
     } catch (err) {
       console.log(err);
       toast.error("Failed to update status");

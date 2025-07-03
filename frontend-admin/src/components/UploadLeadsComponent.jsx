@@ -7,7 +7,7 @@ import { cancelTempUpload, saveLeadsToDB, uploadTempFile } from "../services/api
 import "react-circular-progressbar/dist/styles.css";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 
-function UploadLeadsComponent({ showForm }) {
+function UploadLeadsComponent({ showForm, refreshLeads }) {
   const [progress, setProgress] = useState(0);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -80,6 +80,8 @@ const handleSaveToDb = async () => {
   try {
     const res = await saveLeadsToDB(fileBuffer, uploadedFileName);
     toast.success(res.message);
+    await refreshLeads()
+    showForm(false)
     resetState();
   } catch (err) {
     toast.error("Saving to DB failed");
@@ -196,7 +198,6 @@ const handleSaveToDb = async () => {
             <button
               onClick={handleTempUploadAndVerify}
               className={style.save}
-              disabled={!fileBuffer || typeof fileBuffer === "string"}
             >
               Next {" >"}
             </button>

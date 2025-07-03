@@ -105,8 +105,11 @@
 .p{
   list-style: disc;
   color: grey;
+  margin: 5%;
+  margin-top: 0;
   margin-left: 2%;
   width: 100%;
+
 }
 .eachBreak{
   width: 100%;
@@ -123,3 +126,4 @@
   align-items: center;
   justify-content: center;
 }
+

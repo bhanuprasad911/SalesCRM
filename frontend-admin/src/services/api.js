@@ -94,3 +94,7 @@ export const getLeadFiles = async()=>{
   const response = await axiosInstance.get("/lead/all");
   return response;
 }
+export const getRecentClosedLeads = async()=>{
+  const response = await axiosInstance.get("/lead/getClosedInLast10Days");
+  return response;
+}

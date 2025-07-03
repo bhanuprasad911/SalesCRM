@@ -35,8 +35,7 @@ const Layout = ({ children }) => {
 
 const LayoutWrapper = () => {
   // useLogoutOnTabCLose()
-  // useTabCloseLogout()
-
+  
   return (
     <Layout>
       <Routes>
@@ -81,9 +80,9 @@ const LayoutWrapper = () => {
 
 
 const App = () => {
-  useEffect(() => {
-     setupLogoutOnTabClose("http://localhost:5003/api/employee/logout");
-  }, []);
+      useTabCloseLogout()
+
+
   return (
     <Router basename="/ex">
       <AuthProvider>

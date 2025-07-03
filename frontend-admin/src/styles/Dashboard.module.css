@@ -7,6 +7,10 @@
     height: 100vh;
     width: 87vw;
 }
+.recharts-wrapper:focus {
+  outline: none;
+}
+
 .grid{
     height: 85vh;
     width: 100%;
@@ -126,4 +130,10 @@
 }
 .name{
     margin-right: 10%;
+}.center{
+  height: 100%;
+  width: 100%;
+  display:flex;
+  align-items: center;
+  justify-content: center;
 }

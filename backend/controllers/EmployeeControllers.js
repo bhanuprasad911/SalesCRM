@@ -6,38 +6,75 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 dotenv.config();
 const secret = process.env.SECRET;
+import { Activity as AdminActivity } from "../models/Admin.model.js";
+
 
 export const signup = async (req, res) => {
   try {
     const { firstName, lastName, email, location, language } = req.body;
-    if (!firstName || !lastName || !email || !location || !language)
-      return res
-        .status(404)
-        .json({ message: "Please fill all the required fields" });
+
+    if (!firstName || !lastName || !email || !location || !language) {
+      return res.status(400).json({ message: "Please fill all the required fields" });
+    }
+
     const exist = await Employee.findOne({ email });
-    if (exist)
-      return res
-        .status(400)
-        .json({ message: "Employee with the given mail already exists" });
+    if (exist) {
+      return res.status(400).json({ message: "Employee with the given email already exists" });
+    }
+
     const newEmployee = new Employee({
       firstName,
       lastName,
       email,
-      password: lastName,
+      password: lastName, // Default password set as last name (optional)
       language,
       location,
     });
+
     const result = await newEmployee.save();
-    res
-      .status(201)
-      .json({ message: "Employee created successfully", data: result });
+
+    // 🔍 Find all unassigned leads (assignedTo: null)
+    const unassignedLeads = await Lead.find({ AssignedTo: null });
+
+    if (unassignedLeads.length > 0) {
+      const leadIds = unassignedLeads.map((lead) => lead._id);
+
+      // ✅ Assign all unassigned leads to the newly created employee
+      await Lead.updateMany(
+        { AssignedTo: null },
+        { $set: { AssignedTo: newEmployee._id } }
+      );
+
+      await Employee.findByIdAndUpdate(newEmployee._id, {
+        $push: {
+          assignedChats: { $each: leadIds },
+          recentActivities: {
+            $each: [
+              {
+                message: `You were assigned ${leadIds.length} old unassigned lead(s)`,
+                timestamp: new Date(),
+              },
+            ],
+            $slice: -10,
+          },
+        },
+      });
+
+      await Activity.create({
+        message: `${newEmployee.firstName} ${newEmployee.lastName} was assigned ${leadIds.length} old unassigned lead(s)`,
+      });
+    }
+
+    return res.status(201).json({
+      message: "Employee created successfully",
+      data: result,
+    });
+
   } catch (error) {
-    console.log(error);
+    console.error("Signup error:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 
 // controllers/authController.js
@@ -96,7 +133,10 @@ export const login = async (req, res) => {
           lastBreak.breakEndTime = currentTime;
 
           // Ensure today's history has checkedInTime set
-          if (!lastHistory.checkedInTime || lastHistory.checkedInTime === "--:--") {
+          if (
+            !lastHistory.checkedInTime ||
+            lastHistory.checkedInTime === "--:--"
+          ) {
             lastHistory.checkedInTime = currentTime;
           }
         }
@@ -154,19 +194,14 @@ export const login = async (req, res) => {
   }
 };
 
-
-
-
-
-
 // controllers/userController.js
 export const getMe = async (req, res) => {
   try {
-    console.log("visited me")
+    console.log("visited me");
     // req.user is attached by authMiddleware after token verification
     const { id, email, name } = req.user;
     const user = await Employee.findById(id);
-    console.log(user)
+    console.log(user);
     res.status(200).json({
       user: user, // send only safe, non-sensitive fields
     });
@@ -289,28 +324,139 @@ export const updateEmpDetails = async (req, res) => {
   }
 };
 
+
+
 export const deleteEmp = async (req, res) => {
   try {
-    console.log(req.params);
     const { id } = req.params;
-    console.log(id);
 
     if (!id) {
       return res.status(400).json({ message: "Employee ID is required" });
     }
 
-    const deletedEmp = await Employee.findByIdAndDelete(id);
-
-    if (!deletedEmp) {
+    const employeeToDelete = await Employee.findById(id);
+    if (!employeeToDelete) {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    return res.status(200).json({ message: "Employee deleted successfully" });
+    // Fetch leads assigned to this employee
+    const assignedLeads = await Lead.find({ AssignedTo: id });
+
+    // Get remaining employees (excluding the one to be deleted)
+    const remainingEmployees = await Employee.find({ _id: { $ne: id } });
+
+    const employeeMap = new Map(); // empId => leads to assign
+
+    if (remainingEmployees.length === 0) {
+      // No employees to reassign to – unassign all leads
+      await Lead.updateMany({ AssignedTo: id }, { $set: { AssignedTo: null } });
+    } else {
+      // Step 1: Assign by language + location
+      const remainingLeads1 = [];
+
+      for (const lead of assignedLeads) {
+        const match = remainingEmployees.find(
+          (emp) => emp.language === lead.language && emp.location === lead.location
+        );
+
+        if (match) {
+          const empId = match._id.toString();
+          if (!employeeMap.has(empId)) employeeMap.set(empId, []);
+          employeeMap.get(empId).push(lead);
+        } else {
+          remainingLeads1.push(lead);
+        }
+      }
+
+      // Step 2: Assign by language OR location
+      const remainingLeads2 = [];
+
+      for (const lead of remainingLeads1) {
+        const matching = remainingEmployees.filter(
+          (emp) => emp.language === lead.language || emp.location === lead.location
+        );
+
+        if (matching.length > 0) {
+          const empAssignments = Array.from(employeeMap.entries()).map(([empId, leads]) => ({
+            empId,
+            count: leads.length,
+          }));
+
+          const empCounts = remainingEmployees.map((emp) => {
+            const entry = empAssignments.find((e) => e.empId === emp._id.toString());
+            return { emp, count: entry ? entry.count : 0 };
+          });
+
+          const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
+          const empId = leastAssignedEmp._id.toString();
+          if (!employeeMap.has(empId)) employeeMap.set(empId, []);
+          employeeMap.get(empId).push(lead);
+        } else {
+          remainingLeads2.push(lead);
+        }
+      }
+
+      // Step 3: Distribute remaining leads round-robin
+      for (const lead of remainingLeads2) {
+        const empAssignments = Array.from(employeeMap.entries()).map(([empId, leads]) => ({
+          empId,
+          count: leads.length,
+        }));
+
+        const empCounts = remainingEmployees.map((emp) => {
+          const entry = empAssignments.find((e) => e.empId === emp._id.toString());
+          return { emp, count: entry ? entry.count : 0 };
+        });
+
+        const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
+        const empId = leastAssignedEmp._id.toString();
+        if (!employeeMap.has(empId)) employeeMap.set(empId, []);
+        employeeMap.get(empId).push(lead);
+      }
+
+      // Save reassigned leads and update employees
+      for (const [empId, leads] of employeeMap.entries()) {
+        const leadIds = leads.map((l) => l._id);
+
+        // Update AssignedTo in leads
+        await Lead.updateMany({ _id: { $in: leadIds } }, { $set: { AssignedTo: empId } });
+
+        // Update assignedChats and recentActivities of employee
+        await Employee.findByIdAndUpdate(empId, {
+          $push: {
+            assignedChats: { $each: leadIds },
+            recentActivities: {
+              $each: [
+                {
+                  message: `You were reassigned ${leadIds.length} lead(s) from a removed employee.`,
+                  timestamp: new Date(),
+                },
+              ],
+              $slice: -10,
+            },
+          },
+        });
+
+        // Log admin activity
+        const emp = await Employee.findById(empId);
+        await AdminActivity.create({
+          message: `Reassigned ${leadIds.length} lead(s) from ${employeeToDelete.firstName} ${employeeToDelete.lastName} to ${emp.firstName} ${emp.lastName}`,
+        });
+      }
+    }
+
+    // Now delete the employee
+    await Employee.findByIdAndDelete(id);
+
+    res.status(200).json({
+      message: "Employee deleted and leads reassigned successfully.",
+    });
   } catch (error) {
-    console.log("Error while deleting employee", error);
-    return res.status(500).json({ message: error.message });
+    console.error("Delete employee error:", error);
+    res.status(500).json({ message: "Server error during employee deletion" });
   }
 };
+
 
 export const logout = async (req, res) => {
   console.log("Triggered logout");
@@ -329,7 +475,8 @@ export const logout = async (req, res) => {
     const formattedToday = `${day}-${month}-${year}`;
 
     const employee = await Employee.findById(id);
-    if (!employee) return res.status(404).json({ message: "Employee not found" });
+    if (!employee)
+      return res.status(404).json({ message: "Employee not found" });
 
     const history = employee.history;
     const lastHistory = history[history.length - 1];
@@ -413,10 +560,6 @@ export const logout = async (req, res) => {
     return res.status(500).json({ message: "Server error during logout" });
   }
 };
-
-
-
-
 
 export const updatePassword = async (req, res) => {
   try {

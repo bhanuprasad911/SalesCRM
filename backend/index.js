@@ -28,6 +28,9 @@ app.use(cookieParser())
 app.use("/api/employee", empRouter);
 app.use('/api/lead', LeadRouter)
 app.use('/api/admin', adminrouter)
+app.get('/', (req,res)=>{
+  res.send('Welcome to the server')
+})
 
 app.use(
   "/admin",

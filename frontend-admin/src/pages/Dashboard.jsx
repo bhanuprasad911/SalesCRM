@@ -3,12 +3,16 @@ import style from "../styles/Dashboard.module.css";
 import SearchComponent from "../components/SearchComponent.jsx";
 import { useState } from "react";
 import { useEffect } from "react";
-import { getActivity, getEmployees, getLeadFiles } from "../services/api.js";
+import { getActivity, getEmployees, getLeadFiles, getRecentClosedLeads } from "../services/api.js";
 import { FaMoneyBills } from "react-icons/fa6";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { MdHandshake } from "react-icons/md";
 import { PiSpeedometerBold } from "react-icons/pi";
 import EmployeeComponent from "../components/EmployeeComponent.jsx";
+import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+
+
+
 
 function Dashboard({ select }) {
   const [search, setSearch] = useState("");
@@ -18,6 +22,12 @@ function Dashboard({ select }) {
   const [assignedThisWeek, setAssignedThisWeek] = useState(0);
   const [Employees, setEmployees] = useState([]);
   const [activeCount, setActiveCount] = useState(0);
+  const [totalLeads, setTotalLeads] = useState(0);
+  const [totalClosed, setTotalClosed]= useState(0);
+  const [graphdata, setGraphdata]=useState([]);
+  
+  const conversionRate = (totalClosed / totalLeads) * 100;
+
 
   useEffect(() => {
     setActiveCount(Employees.length);
@@ -30,7 +40,7 @@ function Dashboard({ select }) {
         setLeadFiles(response.data);
         console.log(response);
       } catch (error) {
-        console.error(error);
+        console.error(error);  useEffect(()=>console.log(graphdata), [])
       }
     };
     getleads();
@@ -61,6 +71,19 @@ function Dashboard({ select }) {
         0
       );
       setAssignedThisWeek(totalAssignedThisWeek);
+      const totalTillNow = leadFiles.reduce(
+        (acc, file) =>
+          acc + (file.total|| 0),
+        0
+        );
+        setTotalLeads(totalTillNow)
+
+        const closedTillNow = leadFiles.reduce(
+          (acc, file) =>
+            acc + (file.closed || 0),
+          0
+          );
+          setTotalClosed(closedTillNow)
     };
 
     updateValues();
@@ -70,6 +93,9 @@ function Dashboard({ select }) {
     const fetchEmployees = async () => {
       try {
         const res = await getEmployees();
+        const graphRes = await getRecentClosedLeads()
+        console.log(graphRes)
+        setGraphdata(graphRes.data)
         const filtered = res.data.data.filter((emp) => emp.status === "Active");
         setEmployees(filtered);
       } catch (error) {
@@ -101,6 +127,7 @@ function Dashboard({ select }) {
     };
     fetchActivities();
   }, []);
+    useEffect(()=>console.log(graphdata), [])
   // useEffect(()=>console.log(activities), [activities])
   return (
     <div className={style.main}>
@@ -141,8 +168,37 @@ function Dashboard({ select }) {
           <button className={style.logoButton}>
             <PiSpeedometerBold size={30} color={"grey"}/>
           </button>
+              <div className={style.divdetails}>
+            <p className={style.tag}>Conversion rate</p>
+            <p className={style.value}>{conversionRate}%</p>
+          </div>
         </div>
-        <div className={style.grid5}>Five</div>
+        <div className={style.grid5}>
+  <h4 style={{ marginBottom: "10px" }}>Closed Leads in Last 10 Days</h4>
+  <div style={{ width: "100%", height: 290, display:"flex", alignItems:"center" }}>
+   <ResponsiveContainer>
+  <BarChart data={graphdata} barSize={50}>
+    <XAxis
+      dataKey="date"
+      tickFormatter={(dateStr) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      }}
+    />
+    <YAxis allowDecimals={false} />
+    <Tooltip />
+   <Bar
+  dataKey="closedCount"
+  fill="#8884d8"
+  radius={[8, 8, 0, 0]}
+  activeBar={{ fill: "#8884d8", stroke: "none", fillOpacity: 1 }}
+/>
+  </BarChart>
+</ResponsiveContainer>
+
+  </div>
+</div>
+
         <div className={style.grid6}>
           <p>Recent Activity Feed</p>
           <div className={style.innerList}>
@@ -161,8 +217,9 @@ function Dashboard({ select }) {
         </div>
         <div className={style.grid7}>
           {
-            Employees.length>0&&(
+            Employees.length>0?(
               <>
+              
               <div className={style.tableHead}>
                 <p className={style.name}>Name</p>
                 <p>employee id</p>
@@ -174,6 +231,11 @@ function Dashboard({ select }) {
                 Employees.map((employee, index)=><EmployeeComponent key={index} employee={employee}/>)
               }
               </>
+            ):(
+              <div className={style.center}>
+
+                <p>No employees are active currently</p>
+              </div>
             )
           }
         </div>

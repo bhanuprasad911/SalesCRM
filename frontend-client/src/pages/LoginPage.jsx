@@ -22,6 +22,7 @@ const LoginPage = () => {
     try {
       const res = await login(form);
       toast.success("Login successful!");
+      sessionStorage.setItem("logged", "true");
       setUser(res.data.data)
       navigate("/home");
     } catch (err) {
