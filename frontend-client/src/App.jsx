@@ -32,14 +32,14 @@ const Layout = ({ children }) => {
 };
 
 const LayoutWrapper = () => {
-  const { logoutUser} = useAuth(); // ✅ get logout function from context
+  const { logoutUser, user} = useAuth(); // ✅ get logout function from context
   useExecuteLogoutOnUserLeave(logoutUser); // ✅ use the hook
   // console.log(user)
 
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Navigate to="/home" />} />
+        <Route path="/" element={user?<Navigate to="/home" />: <Navigate to="/login"/>} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/home"
