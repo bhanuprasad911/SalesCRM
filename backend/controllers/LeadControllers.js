@@ -10,13 +10,10 @@ import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
 import csvParser from "csv-parser";
 
-
 export const saveToDb = async (req, res) => {
   const { tempId, fileName } = req.body;
 
-  if (!tempId) {
-    return res.status(400).json({ message: "Temp ID is required" });
-  }
+  if (!tempId) return res.status(400).json({ message: "Temp ID is required" });
 
   const filePath = path.join(process.cwd(), "uploads", "temp", String(tempId));
   if (!fs.existsSync(filePath)) {
@@ -35,144 +32,166 @@ export const saveToDb = async (req, res) => {
       .pipe(csvParser())
       .on("data", (row) => rawLeads.push(row))
       .on("end", async () => {
-        const requiredFields = ["name", "email", "phone", "location", "language", "source", "NextAvailable"];
-        const invalid = rawLeads.find((lead) => requiredFields.some((f) => !lead[f]));
-        if (invalid) {
-          return res.status(400).json({ message: "Missing fields in CSV data" });
-        }
-
-        const employees = await Employee.find();
-        const employeeMap = new Map(); // empId => lead[]
-        const assignedLeads = [];
-        const remainingLeads = [];
-
-        // Case 1: No employees
-        if (employees.length === 0) {
-          const unassignedLeads = rawLeads.map((lead) => ({ ...lead, AssignedTo: null, fileName }));
-          await Lead.insertMany(unassignedLeads);
-          await LeadFile.create({
-            name: fileName,
-            total: unassignedLeads.length,
-            assigned: 0,
-            unAssigned: unassignedLeads.length,
-            closed: 0,
-          });
-          fs.unlinkSync(filePath);
-          return res.status(200).json({ message: "No employees found. All leads saved as unassigned." });
-        }
-
-        // Step 1: Match by language + location
-        for (const lead of rawLeads) {
-          const match = employees.find(emp => emp.language === lead.language && emp.location === lead.location);
-          if (match) {
-            const empId = match._id.toString();
-            if (!employeeMap.has(empId)) employeeMap.set(empId, []);
-            const doc = { ...lead, AssignedTo: match._id, fileName };
-            employeeMap.get(empId).push(doc);
-            assignedLeads.push(doc);
-          } else {
-            remainingLeads.push(lead);
+        try {
+          if (!rawLeads.length) {
+            fs.unlinkSync(filePath);
+            return res.status(400).json({ message: "CSV file is empty" });
           }
-        }
 
-        // Step 2: Match by language OR location
-        const stillRemainingLeads = [];
-        for (const lead of remainingLeads) {
-          const matchingEmps = employees.filter(emp =>
-            emp.language === lead.language || emp.location === lead.location
-          );
-          if (matchingEmps.length > 0) {
+          const requiredFields = ["name", "email", "phone", "location", "language", "source", "NextAvailable"];
+          const invalid = rawLeads.find((lead) => requiredFields.some((f) => !lead[f]));
+          if (invalid) {
+            fs.unlinkSync(filePath);
+            return res.status(400).json({ message: "Missing fields in CSV data" });
+          }
+
+          const emails = rawLeads.map((lead) => lead.email);
+          const existingLeads = await Lead.find({ email: { $in: emails } }, { email: 1 });
+          const duplicateEmails = existingLeads.map((l) => l.email);
+
+          if (duplicateEmails.length > 0) {
+            fs.unlinkSync(filePath);
+            return res.status(409).json({
+              message: "Duplicate emails found. Upload aborted.",
+              duplicates: duplicateEmails,
+            });
+          }
+
+          const employees = await Employee.find();
+          if (employees.length === 0) {
+            const unassignedLeads = rawLeads.map((lead) => ({ ...lead, AssignedTo: null, fileName }));
+            await Lead.insertMany(unassignedLeads);
+            await LeadFile.create({
+              name: fileName,
+              total: unassignedLeads.length,
+              assigned: 0,
+              unAssigned: unassignedLeads.length,
+              closed: 0,
+            });
+            fs.unlinkSync(filePath);
+            return res.status(200).json({ message: "No employees found. All leads saved as unassigned." });
+          }
+
+          const employeeMap = new Map();
+          const assignedLeads = [];
+          const remainingLeads = [];
+
+          // 1. Match both
+          for (const lead of rawLeads) {
+            const match = employees.find(emp => emp.language === lead.language && emp.location === lead.location);
+            if (match) {
+              const empId = match._id.toString();
+              if (!employeeMap.has(empId)) employeeMap.set(empId, []);
+              const doc = { ...lead, AssignedTo: match._id, fileName };
+              employeeMap.get(empId).push(doc);
+              assignedLeads.push(doc);
+            } else {
+              remainingLeads.push(lead);
+            }
+          }
+
+          // 2. Match either
+          const stillRemainingLeads = [];
+          for (const lead of remainingLeads) {
+            const matchingEmps = employees.filter(emp =>
+              emp.language === lead.language || emp.location === lead.location
+            );
+            if (matchingEmps.length > 0) {
+              const empAssignments = Array.from(employeeMap.entries()).map(([id, leads]) => ({
+                empId: id,
+                count: leads.length,
+              }));
+              const empCounts = employees.map(emp => {
+                const entry = empAssignments.find(e => e.empId === emp._id.toString());
+                return { emp, count: entry ? entry.count : 0 };
+              });
+              const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
+              const empId = leastAssignedEmp._id.toString();
+              if (!employeeMap.has(empId)) employeeMap.set(empId, []);
+              const doc = { ...lead, AssignedTo: leastAssignedEmp._id, fileName };
+              employeeMap.get(empId).push(doc);
+              assignedLeads.push(doc);
+            } else {
+              stillRemainingLeads.push(lead);
+            }
+          }
+
+          // 3. Round robin
+          for (const lead of stillRemainingLeads) {
             const empAssignments = Array.from(employeeMap.entries()).map(([id, leads]) => ({
               empId: id,
               count: leads.length,
             }));
-
-            const empCounts = employees.map((emp) => {
-              const entry = empAssignments.find((e) => e.empId === emp._id.toString());
+            const empCounts = employees.map(emp => {
+              const entry = empAssignments.find(e => e.empId === emp._id.toString());
               return { emp, count: entry ? entry.count : 0 };
             });
-
             const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
             const empId = leastAssignedEmp._id.toString();
             if (!employeeMap.has(empId)) employeeMap.set(empId, []);
             const doc = { ...lead, AssignedTo: leastAssignedEmp._id, fileName };
             employeeMap.get(empId).push(doc);
             assignedLeads.push(doc);
-          } else {
-            stillRemainingLeads.push(lead);
           }
-        }
 
-        // Step 3: Distribute leftover leads round-robin based on least assignments
-        for (const lead of stillRemainingLeads) {
-          const empAssignments = Array.from(employeeMap.entries()).map(([id, leads]) => ({
-            empId: id,
-            count: leads.length,
-          }));
+          // Insert
+          const insertedLeads = await Lead.insertMany(assignedLeads);
 
-          const empCounts = employees.map((emp) => {
-            const entry = empAssignments.find((e) => e.empId === emp._id.toString());
-            return { emp, count: entry ? entry.count : 0 };
+          // Update employee stats
+          for (const [empId, leads] of employeeMap.entries()) {
+            const leadIds = leads
+              .map((l) => insertedLeads.find((ins) => ins.email === l.email)?._id)
+              .filter(Boolean);
+            if (leadIds.length > 0) {
+              const employee = await Employee.findById(empId);
+              await Employee.findByIdAndUpdate(empId, {
+                $push: {
+                  assignedChats: { $each: leadIds },
+                  recentActivities: {
+                    $each: [
+                      {
+                        message: `You were assigned ${leadIds.length} new lead(s)`,
+                        timestamp: new Date(),
+                      },
+                    ],
+                    $slice: -10,
+                  },
+                },
+              });
+              await AdminActivity.create({
+                message: `You have assigned ${leadIds.length} new lead(s) to ${employee.firstName} ${employee.lastName}`,
+              });
+            }
+          }
+
+          await LeadFile.create({
+            name: fileName,
+            total: insertedLeads.length,
+            assigned: insertedLeads.filter((l) => l.AssignedTo).length,
+            unAssigned: insertedLeads.filter((l) => !l.AssignedTo).length,
+            closed: 0,
           });
 
-          const leastAssignedEmp = empCounts.sort((a, b) => a.count - b.count)[0].emp;
-          const empId = leastAssignedEmp._id.toString();
-          if (!employeeMap.has(empId)) employeeMap.set(empId, []);
-          const doc = { ...lead, AssignedTo: leastAssignedEmp._id, fileName };
-          employeeMap.get(empId).push(doc);
-          assignedLeads.push(doc);
+          fs.unlinkSync(filePath);
+          return res.status(200).json({ message: `${insertedLeads.length} leads saved successfully.` });
+        } catch (innerErr) {
+          console.error("Inner saveToDb error:", innerErr);
+          fs.existsSync(filePath) && fs.unlinkSync(filePath);
+          return res.status(500).json({ message: "Failed to process and save leads" });
         }
-
-        // Insert all leads
-        const insertedLeads = await Lead.insertMany(assignedLeads);
-
-        // Update employees
-        for (const [empId, leads] of employeeMap.entries()) {
-          const leadIds = leads
-            .map((l) => insertedLeads.find((ins) => ins.email === l.email)?._id)
-            .filter(Boolean);
-
-          if (leadIds.length > 0) {
-            const employee = await Employee.findById(empId);
-
-            await Employee.findByIdAndUpdate(empId, {
-              $push: {
-                assignedChats: { $each: leadIds },
-                recentActivities: {
-                  $each: [
-                    {
-                      message: `You were assigned ${leadIds.length} new lead(s)`,
-                      timestamp: new Date(),
-                    },
-                  ],
-                  $slice: -10,
-                },
-              },
-            });
-
-            await AdminActivity.create({
-              message: `You have assigned ${leadIds.length} new lead(s) to ${employee.firstName} ${employee.lastName}`,
-            });
-          }
-        }
-
-        // Create LeadFile summary
-        await LeadFile.create({
-          name: fileName,
-          total: insertedLeads.length,
-          assigned: insertedLeads.filter((l) => l.AssignedTo).length,
-          unAssigned: insertedLeads.filter((l) => !l.AssignedTo).length,
-          closed: 0,
-        });
-
-        fs.unlinkSync(filePath);
-        return res.status(200).json({ message: `${insertedLeads.length} leads saved successfully.` });
+      })
+      .on("error", (err) => {
+        console.error("CSV parse error:", err);
+        fs.existsSync(filePath) && fs.unlinkSync(filePath);
+        return res.status(500).json({ message: "Error parsing CSV file" });
       });
   } catch (error) {
     console.error("saveToDb Error:", error);
-    return res.status(500).json({ message: "Failed to save leads to DB." });
+    return res.status(500).json({ message: "Unexpected failure" });
   }
 };
+
+
 
 
 
@@ -197,22 +216,62 @@ export const upload = multer({ storage: tempStorage });
 export const uploadTempFile = async (req, res) => {
   try {
     const file = req.file;
-    if (!file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
+    if (!file) return res.status(400).json({ message: "No file uploaded" });
 
+    const filePath = file.path;
     const tempId = file.filename;
+    const leads = [];
 
-    res.status(200).json({
-      message: "File uploaded to temp successfully",
-      tempId,
-    });
-    console.log("file uploaded");
+    fs.createReadStream(filePath)
+      .pipe(csvParser())
+      .on("data", (row) => leads.push(row))
+      .on("end", async () => {
+        try {
+          if (!leads.length) {
+            fs.unlinkSync(filePath);
+            return res.status(400).json({ message: "CSV file is empty" });
+          }
+
+          const requiredFields = ["name", "email", "phone", "location", "language", "source", "NextAvailable"];
+          const missing = leads.find((lead) => requiredFields.some((f) => !lead[f]));
+          if (missing) {
+            fs.unlinkSync(filePath);
+            return res.status(400).json({ message: "Missing required fields in CSV" });
+          }
+
+          const emails = leads.map((l) => l.email);
+          const existing = await Lead.find({ email: { $in: emails } }, { email: 1 });
+          const duplicates = existing.map((d) => d.email);
+
+          if (duplicates.length > 0) {
+            fs.unlinkSync(filePath);
+            return res.status(409).json({
+              message: "Duplicate emails found in DB",
+              duplicates,
+            });
+          }
+
+          return res.status(200).json({
+            message: "File uploaded and verified successfully",
+            tempId,
+          });
+        } catch (err) {
+          console.error("Verification error:", err);
+          fs.existsSync(filePath) && fs.unlinkSync(filePath);
+          return res.status(500).json({ message: "Internal verification error" });
+        }
+      })
+      .on("error", (err) => {
+        console.error("CSV read error:", err);
+        fs.existsSync(filePath) && fs.unlinkSync(filePath);
+        return res.status(500).json({ message: "CSV parsing error" });
+      });
   } catch (error) {
     console.error("Temp Upload Error:", error);
-    res.status(500).json({ message: "Upload failed" });
+    return res.status(500).json({ message: "Upload failed" });
   }
 };
+
 export const cancelUploadTempFile = async (req, res) => {
   try {
     const { tempId } = req.body;
@@ -416,6 +475,47 @@ export const getClosedChatsLast10Days = async (req, res) => {
   } catch (error) {
     console.error("Error in getRecentClosedLeads:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const removeLeadsFromEmployees = async (req, res) => {
+  const { fileName } = req.body;
+  console.log(req.body)
+
+  if (!fileName) {
+    return res.status(400).json({ message: "fileName is required" });
+  }
+
+  try {
+    // Step 1: Find all lead IDs with the given file name
+    const leads = await Lead.find({ fileName }, { _id: 1 });
+    const leadIds = leads.map((lead) => lead._id);
+
+    if (leadIds.length === 0) {
+      return res.status(404).json({ message: "No leads found with that fileName" });
+    }
+
+    // Step 2: Remove lead references from all employees
+    const updateEmployees = await Employee.updateMany(
+      {},
+      { $pull: { assignedChats: { $in: leadIds }, closedChats: { $in: leadIds } } }
+    );
+
+    // Step 3: Delete leads with the given file name
+    const deleteLeads = await Lead.deleteMany({ _id: { $in: leadIds } });
+
+    // Step 4: Delete the lead file record
+    const deleteFileRecord = await LeadFile.deleteOne({ name: fileName });
+
+    return res.status(200).json({
+      message: `Leads and related references for '${fileName}' deleted successfully.`,
+      removedFromEmployees: updateEmployees.modifiedCount,
+      leadsDeleted: deleteLeads.deletedCount,
+      fileDeleted: deleteFileRecord.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error in lead cleanup:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 

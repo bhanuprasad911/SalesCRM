@@ -2,8 +2,11 @@ import React, { useState, useRef } from "react";
 import style from "../styles/UpploadLeads.module.css";
 import { MdDriveFolderUpload } from "react-icons/md";
 import toast from "react-hot-toast";
-import axios from "axios";
-import { cancelTempUpload, saveLeadsToDB, uploadTempFile } from "../services/api.js";
+import {
+  cancelTempUpload,
+  saveLeadsToDB,
+  uploadTempFile,
+} from "../services/api.js";
 import "react-circular-progressbar/dist/styles.css";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 
@@ -11,7 +14,7 @@ function UploadLeadsComponent({ showForm, refreshLeads }) {
   const [progress, setProgress] = useState(0);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
-  const [fileBuffer, setFileBuffer] = useState(null);
+  const [fileBuffer, setFileBuffer] = useState(null); // tempId or file
   const [uploadedFileName, setUploadedFileName] = useState("");
   const fileRef = useRef();
 
@@ -37,9 +40,17 @@ function UploadLeadsComponent({ showForm, refreshLeads }) {
     setFileBuffer(file);
   };
 
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileSelect({ target: { files: [file] } });
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
+
   const handleTempUploadAndVerify = async () => {
     if (!fileBuffer || typeof fileBuffer === "string") {
-      toast.error("Please select a file before proceeding.");
+      toast.error("Please select a valid file.");
       return;
     }
 
@@ -47,48 +58,64 @@ function UploadLeadsComponent({ showForm, refreshLeads }) {
     formData.append("file", fileBuffer);
 
     try {
-      const res = await uploadTempFile(formData, setProgress);
-
       setIsVerifying(true);
+      setProgress(10);
 
-      setTimeout(() => {
-        setFileBuffer(res.tempId);
-        setIsVerifying(false);
-        setVerified(true);
-      }, 1500);
+      // Simulate progress while uploading/validating
+      let p = 10;
+      const interval = setInterval(() => {
+        if (p < 95) {
+          p += 5;
+          setProgress(p);
+        } else {
+          clearInterval(interval);
+        }
+      }, 150);
+
+      const res = await uploadTempFile(formData);
+
+      clearInterval(interval);
+      setProgress(100);
+      setFileBuffer(res.tempId); // Now holds the temp file ID
+      setIsVerifying(false);
+      setVerified(true);
     } catch (error) {
-      toast.error("Upload failed.");
+      console.error("uploadTempFile error:", error);
+      setIsVerifying(false);
+      setProgress(0);
+
+      const message = error?.response?.data?.message || "Upload failed.";
+      toast.error(message);
+
+      const duplicates = error?.response?.data?.duplicates || [];
+      duplicates.forEach((d) => toast.error(`Duplicate: ${d}`));
+
+      resetState();
+      showForm(false);
     }
   };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFileSelect({ target: { files: [file] } });
+  const handleSaveToDb = async () => {
+    if (!fileBuffer || typeof fileBuffer !== "string") {
+      toast.error("File not verified.");
+      return;
+    }
+
+    try {
+      const res = await saveLeadsToDB(fileBuffer, uploadedFileName);
+      toast.success(res.message);
+      await refreshLeads();
+      showForm(false);
+      resetState();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save to DB");
+      err.response?.data?.duplicates?.forEach((d) =>
+        toast.error(`Duplicate: ${d}`)
+      );
+      showForm(false);
+      resetState();
     }
   };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
- 
-const handleSaveToDb = async () => {
-  if (!fileBuffer) return;
-
-  try {
-    const res = await saveLeadsToDB(fileBuffer, uploadedFileName);
-    toast.success(res.message);
-    await refreshLeads()
-    showForm(false)
-    resetState();
-  } catch (err) {
-    toast.error("Saving to DB failed");
-    console.error("Saving to DB failed", err);
-  }
-};
-
 
   const handleCancelUpload = async () => {
     if (!fileBuffer) {
@@ -105,7 +132,7 @@ const handleSaveToDb = async () => {
 
     try {
       await cancelTempUpload(fileBuffer);
-      toast.success("File upload cancelled.");
+      toast.success("Upload cancelled.");
       resetState();
       if (fileRef.current) fileRef.current.value = "";
     } catch (error) {
@@ -143,7 +170,6 @@ const handleSaveToDb = async () => {
               >
                 <MdDriveFolderUpload size={50} />
               </div>
-
               <p>Drag your file to start uploading</p>
               <p>or</p>
               <button
@@ -155,14 +181,12 @@ const handleSaveToDb = async () => {
             </>
           )}
 
-          {/* Filename display */}
           {uploadedFileName && (
             <p style={{ color: "#333", marginTop: "10px" }}>
               {uploadedFileName}
             </p>
           )}
 
-          {/* Uploading Progress */}
           {progress > 0 && (
             <div style={{ width: 50, height: 50, margin: "20px auto" }}>
               <CircularProgressbar
@@ -178,28 +202,24 @@ const handleSaveToDb = async () => {
             </div>
           )}
 
-          {/* Verifying... */}
           {progress > 0 && progress < 100 && isVerifying && (
             <div style={{ marginTop: "20px" }}>
               <p>Verifying leads...</p>
             </div>
           )}
 
-          {/* Final Message */}
-          {progress === 100 && (
+          {progress === 100 && verified && (
             <p style={{ marginTop: "10px" }}>
-              File verified, click on upload to save in DB or cancel to cancel the upload.
+              File verified. Click <strong>Upload</strong> to save or{" "}
+              <strong>Cancel</strong> to discard.
             </p>
           )}
         </div>
 
         <div className={style.buttons}>
-          {progress < 100 ? (
-            <button
-              onClick={handleTempUploadAndVerify}
-              className={style.save}
-            >
-              Next {" >"}
+          {!verified ? (
+            <button onClick={handleTempUploadAndVerify} className={style.save}>
+              Next {">"}
             </button>
           ) : (
             <button onClick={handleSaveToDb} className={style.save}>
