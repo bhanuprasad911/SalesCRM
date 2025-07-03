@@ -40,7 +40,7 @@ app.use(
   "/admin",
   express.static(path.join(__dirname, "../frontend-admin/dist"))
 );
-app.use("/ex", express.static(path.join(__dirname, "../frontend-client/dist")));
+app.use("/employee", express.static(path.join(__dirname, "../frontend-client/dist")));
 
 app.get("/admin/*path", (req, res, next) => {
   if (req.accepts("html")) {
