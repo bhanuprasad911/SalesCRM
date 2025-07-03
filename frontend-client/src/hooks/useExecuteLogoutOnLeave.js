@@ -1,17 +1,16 @@
-// useExecuteOnUserLeave.js
+// hooks/useExecuteLogoutOnUserLeave.js
 import { useEffect, useRef } from "react";
 
 function useExecuteLogoutOnUserLeave(logoutUser, delayInMs = 5 * 60 * 1000) {
   const timeoutRef = useRef(null);
+  console.log("executing the logout on leave")
 
   const startTimer = () => {
     if (!timeoutRef.current) {
       timeoutRef.current = setTimeout(async () => {
-        console.log("⏰ 5 minutes passed. Calling logoutUser...");
+        console.log("⏰ 5 minutes passed. Executing logoutUser...");
         try {
-          if(user){
-            await logoutUser();
-          }
+          await logoutUser(); // ⬅ logout even if user is null
         } catch (error) {
           console.error("Error in logoutUser:", error);
         }
@@ -42,4 +41,5 @@ function useExecuteLogoutOnUserLeave(logoutUser, delayInMs = 5 * 60 * 1000) {
     };
   }, []);
 }
+
 export default useExecuteLogoutOnUserLeave;

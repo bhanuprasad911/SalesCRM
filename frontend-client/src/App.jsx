@@ -32,8 +32,9 @@ const Layout = ({ children }) => {
 };
 
 const LayoutWrapper = () => {
-  const { logoutUser, user } = useAuth(); // ✅ get logout function from context
-  useExecuteLogoutOnUserLeave(logoutUser, user); // ✅ use the hook
+  const { logoutUser, } = useAuth(); // ✅ get logout function from context
+  useExecuteLogoutOnUserLeave(logoutUser); // ✅ use the hook
+  // console.log(user)
 
   return (
     <Layout>
