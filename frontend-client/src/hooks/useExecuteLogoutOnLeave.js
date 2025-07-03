@@ -9,7 +9,9 @@ function useExecuteLogoutOnUserLeave(logoutUser, delayInMs = 5 * 60 * 1000) {
       timeoutRef.current = setTimeout(async () => {
         console.log("⏰ 5 minutes passed. Calling logoutUser...");
         try {
-          await logoutUser();
+          if(user){
+            await logoutUser();
+          }
         } catch (error) {
           console.error("Error in logoutUser:", error);
         }
