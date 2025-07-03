@@ -63,8 +63,8 @@
   justify-content: space-evenly;
 }
 .rightTop {
-  height: 70%;
-  width: 75%;
+  height: 75%;
+  width: 65%;
   border: 10px solid purple;
   display: flex;
   align-items: center;

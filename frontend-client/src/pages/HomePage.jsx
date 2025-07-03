@@ -23,15 +23,15 @@ function HomePage() {
     });
   };
   const allBreaks = user.history
-  ?.flatMap(entry =>
-    entry.breaks.map(brk => ({
-      ...brk,
-      date: entry.date,
-      fullDateTime: new Date(`${entry.date} ${brk.breakStartTime}`)
-    }))
-  )
-  .sort((a, b) => b.fullDateTime - a.fullDateTime) // Sort by latest first
-  .slice(0, 10); 
+    ?.flatMap((entry) =>
+      entry.breaks.map((brk) => ({
+        ...brk,
+        date: entry.date,
+        fullDateTime: new Date(`${entry.date} ${brk.breakStartTime}`),
+      }))
+    )
+    .sort((a, b) => b.fullDateTime - a.fullDateTime) // Sort by latest first
+    .slice(0, 10);
   useEffect(() => {
     const today = getFormattedDate();
     const currentShift = user.history.find((hist) => hist.date === today);
@@ -55,43 +55,7 @@ function HomePage() {
     return `${day}-${month}-${year}`;
   }
 
-  // const updateCheckIn = async () => {
-  //   if (isBreak) return toast.error("Remove break");
 
-  //   const currentTime = getCurrentTime();
-  //   const prevCheckedIn = checkedIn; // Save the old value before toggling
-
-  //   // 👇 Prepare new check-in or check-out time before updating state
-  //   const newCheckInDetails = {
-  //     ...checkInDetails,
-  //     [!prevCheckedIn ? "checkedInTime" : "checkedOutTime"]: currentTime
-  //   };
-
-  //   // 🔄 Update state
-
-  //   // 📦 Send new details to backend
-  //   const data = {
-  //     checkedIn: !prevCheckedIn, // true when checking in, false when checking out
-  //     shift: {
-  //       date: getFormattedDate(),
-  //       checkedInTime: newCheckInDetails.checkedInTime,
-  //       checkedOutTime: newCheckInDetails.checkedOutTime,
-  //       breaks: []
-  //     }
-  //   };
-
-  //   try {
-  //     const response = await updateCheck(data);
-  //     console.log(response);
-  //     setUser(response.data.data)
-  //     toast.success(response.data.message);
-  //     setCheckedInDetails(newCheckInDetails);
-  //   setCheckedIn(!prevCheckedIn);
-  //   } catch (err) {
-  //     toast.error(err.response.data.message);
-  //     console.error(err);
-  //   }
-  // };
   const handleLogout = async () => {
     try {
       await logout();
@@ -115,7 +79,9 @@ function HomePage() {
       return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
     }
   }
-  user?.recentActivities.sort((a,b)=>{return new Date(b.timestamp)-new Date(a.timestamp)});
+  user?.recentActivities.sort((a, b) => {
+    return new Date(b.timestamp) - new Date(a.timestamp);
+  });
 
   const updateBreak = () => {
     if (!checkedIn) {
@@ -159,24 +125,23 @@ function HomePage() {
           ></button>
         </div>
         <div className={style.break}>
-  {allBreaks.map((brk, index) => (
-    <div key={index} className={style.eachBreak}>
-      <div className={style.deb}>
-        <p>Break</p>
-        <p>{brk.breakStartTime}</p>
-      </div>
-      <div className={style.deb}>
-        <p>Ended</p>
-        <p>{brk.breakEndTime || "Ongoing"}</p>
-      </div>
-      <div className={style.deb}>
-        <p>Date</p>
-        <p>{brk.date}</p>
-      </div>
-    </div>
-  ))}
-</div>
-
+          {allBreaks.map((brk, index) => (
+            <div key={index} className={style.eachBreak}>
+              <div className={style.deb}>
+                <p>Break</p>
+                <p>{brk.breakStartTime}</p>
+              </div>
+              <div className={style.deb}>
+                <p>Ended</p>
+                <p>{brk.breakEndTime || "Ongoing"}</p>
+              </div>
+              <div className={style.deb}>
+                <p>Date</p>
+                <p>{brk.date}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className={style.bottom}>

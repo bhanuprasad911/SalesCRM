@@ -9,6 +9,18 @@ function HeaderComponent({}) {
   const {user}= useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  function getTimeBasedGreeting() {
+  const hour = new Date().getHours();
+
+  if (hour >= 5 && hour < 12) {
+    return "Good Morning";
+  } else if (hour >= 12 && hour < 16) {
+    return "Good Afternoon";
+  } else {
+    return "Good Evening";
+  }
+}
+
   const rawPath = location.pathname
   const page =rawPath.slice(1).split("-").map(str => str.charAt(0).toUpperCase() + str.slice(1))
     .join(" ");
@@ -22,7 +34,7 @@ const userN= username.toString()
         </div>
         {
           page==='Home'?<div className={style.wishDiv}>
-            <p className={style.wish}>Good moring</p>
+            <p className={style.wish}>{getTimeBasedGreeting()}</p>
             <p className={style.name}>{userN}</p>
           </div>:<div className={style.details}>
             <button className={style.button} onClick={()=>navigate('/home')}>
