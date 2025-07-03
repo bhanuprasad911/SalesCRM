@@ -50,7 +50,7 @@ app.get("/admin/*path", (req, res, next) => {
   }
 });
 
-app.get("/ex/*path", (req, res, next) => {
+app.get("/employee/*path", (req, res, next) => {
   if (req.accepts("html")) {
     res.sendFile(path.join(__dirname, "../frontend-client/dist/index.html"));
   }
